@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(flutter pub run:*)",
+      "Bash(dart run build_runner:*)",
+      "Bash(echo:*)",
+      "Bash(flutter --version:*)",
+      "Bash(tee:*)",
+      "Bash(/c/dev/flutter/bin/flutter pub run build_runner build:*)",
+      "Bash(cmd.exe /c \"cd /d c:\\\\workspace\\\\tech-attom\\\\study_deck && flutter pub run build_runner build --delete-conflicting-outputs\")",
+      "Bash(cmd.exe /c \"cd /d c:\\\\workspace\\\\tech-attom\\\\study_deck && flutter pub run build_runner build --delete-conflicting-outputs 2>&1\")",
+      "Bash(/c/dev/flutter/bin/flutter.bat pub run build_runner build:*)",
+      "Bash(ls:*)",
+      "Bash(flutter analyze:*)"
+    ]
+  }
+}

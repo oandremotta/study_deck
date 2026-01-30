@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(flutter analyze lib/presentation/providers/study_providers.dart)"
+    ]
+  }
+}
