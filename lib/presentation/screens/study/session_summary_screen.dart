@@ -21,7 +21,7 @@ class SessionSummaryScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final sessionAsync = ref.watch(studyNotifierProvider);
+    final sessionAsync = ref.watch(sessionByIdProvider(sessionId));
     final statsAsync = ref.watch(userStatsProvider);
 
     return Scaffold(

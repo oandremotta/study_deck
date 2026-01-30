@@ -91,6 +91,19 @@ class StudyRepositoryImpl implements StudyRepository {
   }
 
   @override
+  Future<Either<Failure, StudySession?>> getSessionById(String sessionId) async {
+    try {
+      final data = await _studyDao.getSessionById(sessionId);
+      if (data == null) {
+        return const Right(null);
+      }
+      return Right(_dataToSession(data));
+    } catch (e) {
+      return Left(LocalStorageFailure(message: e.toString()));
+    }
+  }
+
+  @override
   Future<Either<Failure, StudySession>> updateSession(StudySession session) async {
     try {
       final data = _sessionToData(session);
@@ -197,14 +210,14 @@ class StudyRepositoryImpl implements StudyRepository {
       switch (mode) {
         case StudyMode.studyNow:
         case StudyMode.newAndReviews:
-          // Get due cards first
+          // Get due cards first (cards with SRS data that are due)
           final dueCards = await _studyDao.getDueCards(
             userId: userId,
             deckId: deckId,
           );
           cardIds.addAll(dueCards.map((c) => c.cardId));
 
-          // Add new cards if needed
+          // Add new cards if needed (cards with SRS state='newCard')
           if (mode == StudyMode.newAndReviews || cardIds.length < (limit ?? 20)) {
             final newCards = await _studyDao.getNewCards(
               userId: userId,
@@ -212,6 +225,49 @@ class StudyRepositoryImpl implements StudyRepository {
               limit: limit != null ? limit - cardIds.length : 10,
             );
             cardIds.addAll(newCards.map((c) => c.cardId));
+          }
+
+          // If still no cards, get cards that have NO SRS data yet
+          if (cardIds.isEmpty) {
+            List<CardTableData> allCards = [];
+
+            if (deckId != null) {
+              // Get cards from specific deck
+              allCards = await _database.cardDao.getCardsByDeck(deckId);
+            } else {
+              // Get cards from ALL user's decks
+              final userDecks = await _database.deckDao.getDecks(userId);
+              for (final deck in userDecks) {
+                final deckCards = await _database.cardDao.getCardsByDeck(deck.id);
+                allCards.addAll(deckCards);
+              }
+            }
+
+            final cardsWithSrs = await _studyDao.getDueCards(userId: userId, deckId: deckId);
+            final cardsWithNewSrs = await _studyDao.getNewCards(userId: userId, deckId: deckId);
+            final srsCardIds = {...cardsWithSrs.map((c) => c.cardId), ...cardsWithNewSrs.map((c) => c.cardId)};
+
+            // Cards without any SRS data
+            final newCardIds = allCards
+                .where((c) => !srsCardIds.contains(c.id))
+                .map((c) => c.id)
+                .take(limit ?? 20)
+                .toList();
+
+            // Create initial SRS data for these cards
+            for (final cardId in newCardIds) {
+              // Get the card to know its deckId
+              final cardData = await _database.cardDao.getCardById(cardId);
+              if (cardData != null) {
+                await _studyDao.getOrCreateCardSrs(
+                  cardId: cardId,
+                  deckId: cardData.deckId,
+                  userId: userId,
+                );
+              }
+            }
+
+            cardIds.addAll(newCardIds);
           }
           break;
 
@@ -234,21 +290,63 @@ class StudyRepositoryImpl implements StudyRepository {
 
         case StudyMode.turbo:
           // Quick session - mix of due and new, limited to ~12 cards
-          final dueCards = await _studyDao.getDueCards(
+          final turboDueCards = await _studyDao.getDueCards(
             userId: userId,
             deckId: deckId,
             limit: 8,
           );
-          cardIds.addAll(dueCards.map((c) => c.cardId));
+          cardIds.addAll(turboDueCards.map((c) => c.cardId));
 
           if (cardIds.length < 12) {
-            final newCards = await _studyDao.getNewCards(
+            final turboNewCards = await _studyDao.getNewCards(
               userId: userId,
               deckId: deckId,
               limit: 12 - cardIds.length,
             );
-            cardIds.addAll(newCards.map((c) => c.cardId));
+            cardIds.addAll(turboNewCards.map((c) => c.cardId));
           }
+
+          // If still no cards, get from deck(s) directly
+          if (cardIds.isEmpty) {
+            List<CardTableData> turboAllCards = [];
+            if (deckId != null) {
+              turboAllCards = await _database.cardDao.getCardsByDeck(deckId);
+            } else {
+              final userDecks = await _database.deckDao.getDecks(userId);
+              for (final deck in userDecks) {
+                final deckCards = await _database.cardDao.getCardsByDeck(deck.id);
+                turboAllCards.addAll(deckCards);
+              }
+            }
+            final turboCardIds = turboAllCards.take(12).map((c) => c.id).toList();
+            for (final cardId in turboCardIds) {
+              final cardData = await _database.cardDao.getCardById(cardId);
+              if (cardData != null) {
+                await _studyDao.getOrCreateCardSrs(
+                  cardId: cardId,
+                  deckId: cardData.deckId,
+                  userId: userId,
+                );
+              }
+            }
+            cardIds.addAll(turboCardIds);
+          }
+          break;
+
+        case StudyMode.shuffle:
+          // UC26: Random shuffle - get all cards and shuffle them
+          List<CardTableData> shuffleAllCards = [];
+          if (deckId != null) {
+            shuffleAllCards = await _database.cardDao.getCardsByDeck(deckId);
+          } else {
+            final userDecks = await _database.deckDao.getDecks(userId);
+            for (final deck in userDecks) {
+              final deckCards = await _database.cardDao.getCardsByDeck(deck.id);
+              shuffleAllCards.addAll(deckCards);
+            }
+          }
+          cardIds = shuffleAllCards.map((c) => c.id).toList();
+          cardIds.shuffle();
           break;
       }
 
@@ -395,26 +493,122 @@ class StudyRepositoryImpl implements StudyRepository {
         return Left(AuthFailure(message: 'User not authenticated'));
       }
 
-      final stats = await _studyDao.getDeckSrsStats(
+      // Get SRS stats (only counts cards that have SRS data)
+      final srsStats = await _studyDao.getDeckSrsStats(
         userId: userId,
         deckId: deckId,
       );
 
+      // Get actual card count from deck (includes cards without SRS data)
+      final allDeckCards = await _database.cardDao.getCardsByDeck(deckId);
+      final actualTotalCards = allDeckCards.length;
+
+      // Cards without SRS data are considered "new"
+      final cardsWithoutSrs = actualTotalCards - srsStats.totalCards;
+      final totalNewCards = srsStats.newCount + cardsWithoutSrs;
+      final totalDueCards = srsStats.dueCount + cardsWithoutSrs;
+
       // Calculate mastery percentage
       double mastery = 0;
-      if (stats.totalCards > 0) {
-        mastery = (stats.reviewCount / stats.totalCards) * 100;
+      if (actualTotalCards > 0) {
+        mastery = (srsStats.reviewCount / actualTotalCards) * 100;
       }
 
       return Right(DeckStudyStats(
         deckId: deckId,
-        totalCards: stats.totalCards,
-        newCards: stats.newCount,
-        learningCards: stats.learningCount,
-        reviewCards: stats.reviewCount,
-        dueCards: stats.dueCount,
+        totalCards: actualTotalCards,
+        newCards: totalNewCards,
+        learningCards: srsStats.learningCount,
+        reviewCards: srsStats.reviewCount,
+        dueCards: totalDueCards,
         masteryPercent: mastery,
       ));
+    } catch (e) {
+      return Left(LocalStorageFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, CardSRS>> markCardAsMastered(String cardId) async {
+    try {
+      final userId = await _getCurrentUserId();
+      if (userId == null) {
+        return Left(AuthFailure(message: 'User not authenticated'));
+      }
+
+      final cardData = await _database.cardDao.getCardById(cardId);
+      if (cardData == null) {
+        return Left(LocalStorageFailure(message: 'Card not found'));
+      }
+
+      final srsData = await _studyDao.getOrCreateCardSrs(
+        cardId: cardId,
+        deckId: cardData.deckId,
+        userId: userId,
+      );
+
+      final currentSrs = _dataToCardSrs(srsData);
+      final masteredSrs = currentSrs.copyWith(
+        state: SRSState.mastered,
+        nextReviewAt: null, // No more reviews needed
+      );
+
+      await _studyDao.updateCardSrs(_cardSrsToData(masteredSrs));
+      return Right(masteredSrs);
+    } catch (e) {
+      return Left(LocalStorageFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, CardSRS>> resetCardProgress(String cardId) async {
+    try {
+      final userId = await _getCurrentUserId();
+      if (userId == null) {
+        return Left(AuthFailure(message: 'User not authenticated'));
+      }
+
+      final cardData = await _database.cardDao.getCardById(cardId);
+      if (cardData == null) {
+        return Left(LocalStorageFailure(message: 'Card not found'));
+      }
+
+      // Create fresh SRS data
+      final freshSrs = CardSRS.initial(
+        cardId: cardId,
+        deckId: cardData.deckId,
+        userId: userId,
+      );
+
+      await _studyDao.updateCardSrs(_cardSrsToData(freshSrs));
+      return Right(freshSrs);
+    } catch (e) {
+      return Left(LocalStorageFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> resetDeckProgress(String deckId) async {
+    try {
+      final userId = await _getCurrentUserId();
+      if (userId == null) {
+        return Left(AuthFailure(message: 'User not authenticated'));
+      }
+
+      // Get all cards in deck
+      final cards = await _database.cardDao.getCardsByDeck(deckId);
+
+      // Reset each card's SRS data
+      for (final card in cards) {
+        final freshSrs = CardSRS.initial(
+          cardId: card.id,
+          deckId: deckId,
+          userId: userId,
+        );
+        await _studyDao.updateCardSrs(_cardSrsToData(freshSrs));
+      }
+
+      return const Right(null);
     } catch (e) {
       return Left(LocalStorageFailure(message: e.toString()));
     }
@@ -566,6 +760,13 @@ class StudyRepositoryImpl implements StudyRepository {
       totalCardsStudied: data.totalCardsStudied,
       totalSessionsCompleted: data.totalSessionsCompleted,
       totalStudyTime: Duration(seconds: data.totalStudyTimeSeconds),
+      // UC33/UC34 fields
+      streakFreezes: data.streakFreezes,
+      weeklyCardsGoal: data.weeklyCardsGoal,
+      weeklyCardsStudied: data.weeklyCardsStudied,
+      weeklySessionsGoal: data.weeklySessionsGoal,
+      weeklySessionsCompleted: data.weeklySessionsCompleted,
+      weekStartDate: data.weekStartDate,
     );
   }
 
@@ -585,6 +786,13 @@ class StudyRepositoryImpl implements StudyRepository {
       totalSessionsCompleted: stats.totalSessionsCompleted,
       totalStudyTimeSeconds: stats.totalStudyTime.inSeconds,
       todayResetDate: DateTime.now(),
+      // UC33/UC34 fields
+      streakFreezes: stats.streakFreezes,
+      weeklyCardsGoal: stats.weeklyCardsGoal,
+      weeklyCardsStudied: stats.weeklyCardsStudied,
+      weeklySessionsGoal: stats.weeklySessionsGoal,
+      weeklySessionsCompleted: stats.weeklySessionsCompleted,
+      weekStartDate: stats.weekStartDate,
     );
   }
 

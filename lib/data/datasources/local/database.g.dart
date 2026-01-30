@@ -4405,6 +4405,52 @@ class $UserStatsTableTable extends UserStatsTable
   late final GeneratedColumn<DateTime> todayResetDate =
       GeneratedColumn<DateTime>('today_reset_date', aliasedName, true,
           type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _streakFreezesMeta =
+      const VerificationMeta('streakFreezes');
+  @override
+  late final GeneratedColumn<int> streakFreezes = GeneratedColumn<int>(
+      'streak_freezes', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(1));
+  static const VerificationMeta _weeklyCardsGoalMeta =
+      const VerificationMeta('weeklyCardsGoal');
+  @override
+  late final GeneratedColumn<int> weeklyCardsGoal = GeneratedColumn<int>(
+      'weekly_cards_goal', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(100));
+  static const VerificationMeta _weeklyCardsStudiedMeta =
+      const VerificationMeta('weeklyCardsStudied');
+  @override
+  late final GeneratedColumn<int> weeklyCardsStudied = GeneratedColumn<int>(
+      'weekly_cards_studied', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _weeklySessionsGoalMeta =
+      const VerificationMeta('weeklySessionsGoal');
+  @override
+  late final GeneratedColumn<int> weeklySessionsGoal = GeneratedColumn<int>(
+      'weekly_sessions_goal', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(7));
+  static const VerificationMeta _weeklySessionsCompletedMeta =
+      const VerificationMeta('weeklySessionsCompleted');
+  @override
+  late final GeneratedColumn<int> weeklySessionsCompleted =
+      GeneratedColumn<int>('weekly_sessions_completed', aliasedName, false,
+          type: DriftSqlType.int,
+          requiredDuringInsert: false,
+          defaultValue: const Constant(0));
+  static const VerificationMeta _weekStartDateMeta =
+      const VerificationMeta('weekStartDate');
+  @override
+  late final GeneratedColumn<DateTime> weekStartDate =
+      GeneratedColumn<DateTime>('week_start_date', aliasedName, true,
+          type: DriftSqlType.dateTime, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [
         userId,
@@ -4420,7 +4466,13 @@ class $UserStatsTableTable extends UserStatsTable
         totalCardsStudied,
         totalSessionsCompleted,
         totalStudyTimeSeconds,
-        todayResetDate
+        todayResetDate,
+        streakFreezes,
+        weeklyCardsGoal,
+        weeklyCardsStudied,
+        weeklySessionsGoal,
+        weeklySessionsCompleted,
+        weekStartDate
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -4512,6 +4564,43 @@ class $UserStatsTableTable extends UserStatsTable
           todayResetDate.isAcceptableOrUnknown(
               data['today_reset_date']!, _todayResetDateMeta));
     }
+    if (data.containsKey('streak_freezes')) {
+      context.handle(
+          _streakFreezesMeta,
+          streakFreezes.isAcceptableOrUnknown(
+              data['streak_freezes']!, _streakFreezesMeta));
+    }
+    if (data.containsKey('weekly_cards_goal')) {
+      context.handle(
+          _weeklyCardsGoalMeta,
+          weeklyCardsGoal.isAcceptableOrUnknown(
+              data['weekly_cards_goal']!, _weeklyCardsGoalMeta));
+    }
+    if (data.containsKey('weekly_cards_studied')) {
+      context.handle(
+          _weeklyCardsStudiedMeta,
+          weeklyCardsStudied.isAcceptableOrUnknown(
+              data['weekly_cards_studied']!, _weeklyCardsStudiedMeta));
+    }
+    if (data.containsKey('weekly_sessions_goal')) {
+      context.handle(
+          _weeklySessionsGoalMeta,
+          weeklySessionsGoal.isAcceptableOrUnknown(
+              data['weekly_sessions_goal']!, _weeklySessionsGoalMeta));
+    }
+    if (data.containsKey('weekly_sessions_completed')) {
+      context.handle(
+          _weeklySessionsCompletedMeta,
+          weeklySessionsCompleted.isAcceptableOrUnknown(
+              data['weekly_sessions_completed']!,
+              _weeklySessionsCompletedMeta));
+    }
+    if (data.containsKey('week_start_date')) {
+      context.handle(
+          _weekStartDateMeta,
+          weekStartDate.isAcceptableOrUnknown(
+              data['week_start_date']!, _weekStartDateMeta));
+    }
     return context;
   }
 
@@ -4550,6 +4639,19 @@ class $UserStatsTableTable extends UserStatsTable
           data['${effectivePrefix}total_study_time_seconds'])!,
       todayResetDate: attachedDatabase.typeMapping.read(
           DriftSqlType.dateTime, data['${effectivePrefix}today_reset_date']),
+      streakFreezes: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}streak_freezes'])!,
+      weeklyCardsGoal: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}weekly_cards_goal'])!,
+      weeklyCardsStudied: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}weekly_cards_studied'])!,
+      weeklySessionsGoal: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}weekly_sessions_goal'])!,
+      weeklySessionsCompleted: attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}weekly_sessions_completed'])!,
+      weekStartDate: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime, data['${effectivePrefix}week_start_date']),
     );
   }
 
@@ -4602,6 +4704,24 @@ class UserStatsTableData extends DataClass
 
   /// Date when today counters were last reset.
   final DateTime? todayResetDate;
+
+  /// Number of streak freezes available.
+  final int streakFreezes;
+
+  /// Weekly cards goal.
+  final int weeklyCardsGoal;
+
+  /// Cards studied this week.
+  final int weeklyCardsStudied;
+
+  /// Weekly sessions goal.
+  final int weeklySessionsGoal;
+
+  /// Sessions completed this week.
+  final int weeklySessionsCompleted;
+
+  /// Start date of current week (Monday).
+  final DateTime? weekStartDate;
   const UserStatsTableData(
       {required this.userId,
       required this.totalXp,
@@ -4616,7 +4736,13 @@ class UserStatsTableData extends DataClass
       required this.totalCardsStudied,
       required this.totalSessionsCompleted,
       required this.totalStudyTimeSeconds,
-      this.todayResetDate});
+      this.todayResetDate,
+      required this.streakFreezes,
+      required this.weeklyCardsGoal,
+      required this.weeklyCardsStudied,
+      required this.weeklySessionsGoal,
+      required this.weeklySessionsCompleted,
+      this.weekStartDate});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -4637,6 +4763,14 @@ class UserStatsTableData extends DataClass
     map['total_study_time_seconds'] = Variable<int>(totalStudyTimeSeconds);
     if (!nullToAbsent || todayResetDate != null) {
       map['today_reset_date'] = Variable<DateTime>(todayResetDate);
+    }
+    map['streak_freezes'] = Variable<int>(streakFreezes);
+    map['weekly_cards_goal'] = Variable<int>(weeklyCardsGoal);
+    map['weekly_cards_studied'] = Variable<int>(weeklyCardsStudied);
+    map['weekly_sessions_goal'] = Variable<int>(weeklySessionsGoal);
+    map['weekly_sessions_completed'] = Variable<int>(weeklySessionsCompleted);
+    if (!nullToAbsent || weekStartDate != null) {
+      map['week_start_date'] = Variable<DateTime>(weekStartDate);
     }
     return map;
   }
@@ -4661,6 +4795,14 @@ class UserStatsTableData extends DataClass
       todayResetDate: todayResetDate == null && nullToAbsent
           ? const Value.absent()
           : Value(todayResetDate),
+      streakFreezes: Value(streakFreezes),
+      weeklyCardsGoal: Value(weeklyCardsGoal),
+      weeklyCardsStudied: Value(weeklyCardsStudied),
+      weeklySessionsGoal: Value(weeklySessionsGoal),
+      weeklySessionsCompleted: Value(weeklySessionsCompleted),
+      weekStartDate: weekStartDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(weekStartDate),
     );
   }
 
@@ -4684,6 +4826,13 @@ class UserStatsTableData extends DataClass
       totalStudyTimeSeconds:
           serializer.fromJson<int>(json['totalStudyTimeSeconds']),
       todayResetDate: serializer.fromJson<DateTime?>(json['todayResetDate']),
+      streakFreezes: serializer.fromJson<int>(json['streakFreezes']),
+      weeklyCardsGoal: serializer.fromJson<int>(json['weeklyCardsGoal']),
+      weeklyCardsStudied: serializer.fromJson<int>(json['weeklyCardsStudied']),
+      weeklySessionsGoal: serializer.fromJson<int>(json['weeklySessionsGoal']),
+      weeklySessionsCompleted:
+          serializer.fromJson<int>(json['weeklySessionsCompleted']),
+      weekStartDate: serializer.fromJson<DateTime?>(json['weekStartDate']),
     );
   }
   @override
@@ -4704,6 +4853,13 @@ class UserStatsTableData extends DataClass
       'totalSessionsCompleted': serializer.toJson<int>(totalSessionsCompleted),
       'totalStudyTimeSeconds': serializer.toJson<int>(totalStudyTimeSeconds),
       'todayResetDate': serializer.toJson<DateTime?>(todayResetDate),
+      'streakFreezes': serializer.toJson<int>(streakFreezes),
+      'weeklyCardsGoal': serializer.toJson<int>(weeklyCardsGoal),
+      'weeklyCardsStudied': serializer.toJson<int>(weeklyCardsStudied),
+      'weeklySessionsGoal': serializer.toJson<int>(weeklySessionsGoal),
+      'weeklySessionsCompleted':
+          serializer.toJson<int>(weeklySessionsCompleted),
+      'weekStartDate': serializer.toJson<DateTime?>(weekStartDate),
     };
   }
 
@@ -4721,7 +4877,13 @@ class UserStatsTableData extends DataClass
           int? totalCardsStudied,
           int? totalSessionsCompleted,
           int? totalStudyTimeSeconds,
-          Value<DateTime?> todayResetDate = const Value.absent()}) =>
+          Value<DateTime?> todayResetDate = const Value.absent(),
+          int? streakFreezes,
+          int? weeklyCardsGoal,
+          int? weeklyCardsStudied,
+          int? weeklySessionsGoal,
+          int? weeklySessionsCompleted,
+          Value<DateTime?> weekStartDate = const Value.absent()}) =>
       UserStatsTableData(
         userId: userId ?? this.userId,
         totalXp: totalXp ?? this.totalXp,
@@ -4741,6 +4903,14 @@ class UserStatsTableData extends DataClass
             totalStudyTimeSeconds ?? this.totalStudyTimeSeconds,
         todayResetDate:
             todayResetDate.present ? todayResetDate.value : this.todayResetDate,
+        streakFreezes: streakFreezes ?? this.streakFreezes,
+        weeklyCardsGoal: weeklyCardsGoal ?? this.weeklyCardsGoal,
+        weeklyCardsStudied: weeklyCardsStudied ?? this.weeklyCardsStudied,
+        weeklySessionsGoal: weeklySessionsGoal ?? this.weeklySessionsGoal,
+        weeklySessionsCompleted:
+            weeklySessionsCompleted ?? this.weeklySessionsCompleted,
+        weekStartDate:
+            weekStartDate.present ? weekStartDate.value : this.weekStartDate,
       );
   UserStatsTableData copyWithCompanion(UserStatsTableCompanion data) {
     return UserStatsTableData(
@@ -4779,6 +4949,24 @@ class UserStatsTableData extends DataClass
       todayResetDate: data.todayResetDate.present
           ? data.todayResetDate.value
           : this.todayResetDate,
+      streakFreezes: data.streakFreezes.present
+          ? data.streakFreezes.value
+          : this.streakFreezes,
+      weeklyCardsGoal: data.weeklyCardsGoal.present
+          ? data.weeklyCardsGoal.value
+          : this.weeklyCardsGoal,
+      weeklyCardsStudied: data.weeklyCardsStudied.present
+          ? data.weeklyCardsStudied.value
+          : this.weeklyCardsStudied,
+      weeklySessionsGoal: data.weeklySessionsGoal.present
+          ? data.weeklySessionsGoal.value
+          : this.weeklySessionsGoal,
+      weeklySessionsCompleted: data.weeklySessionsCompleted.present
+          ? data.weeklySessionsCompleted.value
+          : this.weeklySessionsCompleted,
+      weekStartDate: data.weekStartDate.present
+          ? data.weekStartDate.value
+          : this.weekStartDate,
     );
   }
 
@@ -4798,7 +4986,13 @@ class UserStatsTableData extends DataClass
           ..write('totalCardsStudied: $totalCardsStudied, ')
           ..write('totalSessionsCompleted: $totalSessionsCompleted, ')
           ..write('totalStudyTimeSeconds: $totalStudyTimeSeconds, ')
-          ..write('todayResetDate: $todayResetDate')
+          ..write('todayResetDate: $todayResetDate, ')
+          ..write('streakFreezes: $streakFreezes, ')
+          ..write('weeklyCardsGoal: $weeklyCardsGoal, ')
+          ..write('weeklyCardsStudied: $weeklyCardsStudied, ')
+          ..write('weeklySessionsGoal: $weeklySessionsGoal, ')
+          ..write('weeklySessionsCompleted: $weeklySessionsCompleted, ')
+          ..write('weekStartDate: $weekStartDate')
           ..write(')'))
         .toString();
   }
@@ -4818,7 +5012,13 @@ class UserStatsTableData extends DataClass
       totalCardsStudied,
       totalSessionsCompleted,
       totalStudyTimeSeconds,
-      todayResetDate);
+      todayResetDate,
+      streakFreezes,
+      weeklyCardsGoal,
+      weeklyCardsStudied,
+      weeklySessionsGoal,
+      weeklySessionsCompleted,
+      weekStartDate);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -4836,7 +5036,13 @@ class UserStatsTableData extends DataClass
           other.totalCardsStudied == this.totalCardsStudied &&
           other.totalSessionsCompleted == this.totalSessionsCompleted &&
           other.totalStudyTimeSeconds == this.totalStudyTimeSeconds &&
-          other.todayResetDate == this.todayResetDate);
+          other.todayResetDate == this.todayResetDate &&
+          other.streakFreezes == this.streakFreezes &&
+          other.weeklyCardsGoal == this.weeklyCardsGoal &&
+          other.weeklyCardsStudied == this.weeklyCardsStudied &&
+          other.weeklySessionsGoal == this.weeklySessionsGoal &&
+          other.weeklySessionsCompleted == this.weeklySessionsCompleted &&
+          other.weekStartDate == this.weekStartDate);
 }
 
 class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
@@ -4854,6 +5060,12 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
   final Value<int> totalSessionsCompleted;
   final Value<int> totalStudyTimeSeconds;
   final Value<DateTime?> todayResetDate;
+  final Value<int> streakFreezes;
+  final Value<int> weeklyCardsGoal;
+  final Value<int> weeklyCardsStudied;
+  final Value<int> weeklySessionsGoal;
+  final Value<int> weeklySessionsCompleted;
+  final Value<DateTime?> weekStartDate;
   final Value<int> rowid;
   const UserStatsTableCompanion({
     this.userId = const Value.absent(),
@@ -4870,6 +5082,12 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
     this.totalSessionsCompleted = const Value.absent(),
     this.totalStudyTimeSeconds = const Value.absent(),
     this.todayResetDate = const Value.absent(),
+    this.streakFreezes = const Value.absent(),
+    this.weeklyCardsGoal = const Value.absent(),
+    this.weeklyCardsStudied = const Value.absent(),
+    this.weeklySessionsGoal = const Value.absent(),
+    this.weeklySessionsCompleted = const Value.absent(),
+    this.weekStartDate = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   UserStatsTableCompanion.insert({
@@ -4887,6 +5105,12 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
     this.totalSessionsCompleted = const Value.absent(),
     this.totalStudyTimeSeconds = const Value.absent(),
     this.todayResetDate = const Value.absent(),
+    this.streakFreezes = const Value.absent(),
+    this.weeklyCardsGoal = const Value.absent(),
+    this.weeklyCardsStudied = const Value.absent(),
+    this.weeklySessionsGoal = const Value.absent(),
+    this.weeklySessionsCompleted = const Value.absent(),
+    this.weekStartDate = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : userId = Value(userId);
   static Insertable<UserStatsTableData> custom({
@@ -4904,6 +5128,12 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
     Expression<int>? totalSessionsCompleted,
     Expression<int>? totalStudyTimeSeconds,
     Expression<DateTime>? todayResetDate,
+    Expression<int>? streakFreezes,
+    Expression<int>? weeklyCardsGoal,
+    Expression<int>? weeklyCardsStudied,
+    Expression<int>? weeklySessionsGoal,
+    Expression<int>? weeklySessionsCompleted,
+    Expression<DateTime>? weekStartDate,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -4923,6 +5153,15 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
       if (totalStudyTimeSeconds != null)
         'total_study_time_seconds': totalStudyTimeSeconds,
       if (todayResetDate != null) 'today_reset_date': todayResetDate,
+      if (streakFreezes != null) 'streak_freezes': streakFreezes,
+      if (weeklyCardsGoal != null) 'weekly_cards_goal': weeklyCardsGoal,
+      if (weeklyCardsStudied != null)
+        'weekly_cards_studied': weeklyCardsStudied,
+      if (weeklySessionsGoal != null)
+        'weekly_sessions_goal': weeklySessionsGoal,
+      if (weeklySessionsCompleted != null)
+        'weekly_sessions_completed': weeklySessionsCompleted,
+      if (weekStartDate != null) 'week_start_date': weekStartDate,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -4942,6 +5181,12 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
       Value<int>? totalSessionsCompleted,
       Value<int>? totalStudyTimeSeconds,
       Value<DateTime?>? todayResetDate,
+      Value<int>? streakFreezes,
+      Value<int>? weeklyCardsGoal,
+      Value<int>? weeklyCardsStudied,
+      Value<int>? weeklySessionsGoal,
+      Value<int>? weeklySessionsCompleted,
+      Value<DateTime?>? weekStartDate,
       Value<int>? rowid}) {
     return UserStatsTableCompanion(
       userId: userId ?? this.userId,
@@ -4960,6 +5205,13 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
       totalStudyTimeSeconds:
           totalStudyTimeSeconds ?? this.totalStudyTimeSeconds,
       todayResetDate: todayResetDate ?? this.todayResetDate,
+      streakFreezes: streakFreezes ?? this.streakFreezes,
+      weeklyCardsGoal: weeklyCardsGoal ?? this.weeklyCardsGoal,
+      weeklyCardsStudied: weeklyCardsStudied ?? this.weeklyCardsStudied,
+      weeklySessionsGoal: weeklySessionsGoal ?? this.weeklySessionsGoal,
+      weeklySessionsCompleted:
+          weeklySessionsCompleted ?? this.weeklySessionsCompleted,
+      weekStartDate: weekStartDate ?? this.weekStartDate,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -5011,6 +5263,25 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
     if (todayResetDate.present) {
       map['today_reset_date'] = Variable<DateTime>(todayResetDate.value);
     }
+    if (streakFreezes.present) {
+      map['streak_freezes'] = Variable<int>(streakFreezes.value);
+    }
+    if (weeklyCardsGoal.present) {
+      map['weekly_cards_goal'] = Variable<int>(weeklyCardsGoal.value);
+    }
+    if (weeklyCardsStudied.present) {
+      map['weekly_cards_studied'] = Variable<int>(weeklyCardsStudied.value);
+    }
+    if (weeklySessionsGoal.present) {
+      map['weekly_sessions_goal'] = Variable<int>(weeklySessionsGoal.value);
+    }
+    if (weeklySessionsCompleted.present) {
+      map['weekly_sessions_completed'] =
+          Variable<int>(weeklySessionsCompleted.value);
+    }
+    if (weekStartDate.present) {
+      map['week_start_date'] = Variable<DateTime>(weekStartDate.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -5034,6 +5305,12 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
           ..write('totalSessionsCompleted: $totalSessionsCompleted, ')
           ..write('totalStudyTimeSeconds: $totalStudyTimeSeconds, ')
           ..write('todayResetDate: $todayResetDate, ')
+          ..write('streakFreezes: $streakFreezes, ')
+          ..write('weeklyCardsGoal: $weeklyCardsGoal, ')
+          ..write('weeklyCardsStudied: $weeklyCardsStudied, ')
+          ..write('weeklySessionsGoal: $weeklySessionsGoal, ')
+          ..write('weeklySessionsCompleted: $weeklySessionsCompleted, ')
+          ..write('weekStartDate: $weekStartDate, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -6769,6 +7046,12 @@ typedef $$UserStatsTableTableCreateCompanionBuilder = UserStatsTableCompanion
   Value<int> totalSessionsCompleted,
   Value<int> totalStudyTimeSeconds,
   Value<DateTime?> todayResetDate,
+  Value<int> streakFreezes,
+  Value<int> weeklyCardsGoal,
+  Value<int> weeklyCardsStudied,
+  Value<int> weeklySessionsGoal,
+  Value<int> weeklySessionsCompleted,
+  Value<DateTime?> weekStartDate,
   Value<int> rowid,
 });
 typedef $$UserStatsTableTableUpdateCompanionBuilder = UserStatsTableCompanion
@@ -6787,6 +7070,12 @@ typedef $$UserStatsTableTableUpdateCompanionBuilder = UserStatsTableCompanion
   Value<int> totalSessionsCompleted,
   Value<int> totalStudyTimeSeconds,
   Value<DateTime?> todayResetDate,
+  Value<int> streakFreezes,
+  Value<int> weeklyCardsGoal,
+  Value<int> weeklyCardsStudied,
+  Value<int> weeklySessionsGoal,
+  Value<int> weeklySessionsCompleted,
+  Value<DateTime?> weekStartDate,
   Value<int> rowid,
 });
 
@@ -6822,6 +7111,12 @@ class $$UserStatsTableTableTableManager extends RootTableManager<
             Value<int> totalSessionsCompleted = const Value.absent(),
             Value<int> totalStudyTimeSeconds = const Value.absent(),
             Value<DateTime?> todayResetDate = const Value.absent(),
+            Value<int> streakFreezes = const Value.absent(),
+            Value<int> weeklyCardsGoal = const Value.absent(),
+            Value<int> weeklyCardsStudied = const Value.absent(),
+            Value<int> weeklySessionsGoal = const Value.absent(),
+            Value<int> weeklySessionsCompleted = const Value.absent(),
+            Value<DateTime?> weekStartDate = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               UserStatsTableCompanion(
@@ -6839,6 +7134,12 @@ class $$UserStatsTableTableTableManager extends RootTableManager<
             totalSessionsCompleted: totalSessionsCompleted,
             totalStudyTimeSeconds: totalStudyTimeSeconds,
             todayResetDate: todayResetDate,
+            streakFreezes: streakFreezes,
+            weeklyCardsGoal: weeklyCardsGoal,
+            weeklyCardsStudied: weeklyCardsStudied,
+            weeklySessionsGoal: weeklySessionsGoal,
+            weeklySessionsCompleted: weeklySessionsCompleted,
+            weekStartDate: weekStartDate,
             rowid: rowid,
           ),
           createCompanionCallback: ({
@@ -6856,6 +7157,12 @@ class $$UserStatsTableTableTableManager extends RootTableManager<
             Value<int> totalSessionsCompleted = const Value.absent(),
             Value<int> totalStudyTimeSeconds = const Value.absent(),
             Value<DateTime?> todayResetDate = const Value.absent(),
+            Value<int> streakFreezes = const Value.absent(),
+            Value<int> weeklyCardsGoal = const Value.absent(),
+            Value<int> weeklyCardsStudied = const Value.absent(),
+            Value<int> weeklySessionsGoal = const Value.absent(),
+            Value<int> weeklySessionsCompleted = const Value.absent(),
+            Value<DateTime?> weekStartDate = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               UserStatsTableCompanion.insert(
@@ -6873,6 +7180,12 @@ class $$UserStatsTableTableTableManager extends RootTableManager<
             totalSessionsCompleted: totalSessionsCompleted,
             totalStudyTimeSeconds: totalStudyTimeSeconds,
             todayResetDate: todayResetDate,
+            streakFreezes: streakFreezes,
+            weeklyCardsGoal: weeklyCardsGoal,
+            weeklyCardsStudied: weeklyCardsStudied,
+            weeklySessionsGoal: weeklySessionsGoal,
+            weeklySessionsCompleted: weeklySessionsCompleted,
+            weekStartDate: weekStartDate,
             rowid: rowid,
           ),
         ));
@@ -6950,6 +7263,36 @@ class $$UserStatsTableTableFilterComposer
       column: $state.table.todayResetDate,
       builder: (column, joinBuilders) =>
           ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<int> get streakFreezes => $state.composableBuilder(
+      column: $state.table.streakFreezes,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<int> get weeklyCardsGoal => $state.composableBuilder(
+      column: $state.table.weeklyCardsGoal,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<int> get weeklyCardsStudied => $state.composableBuilder(
+      column: $state.table.weeklyCardsStudied,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<int> get weeklySessionsGoal => $state.composableBuilder(
+      column: $state.table.weeklySessionsGoal,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<int> get weeklySessionsCompleted => $state.composableBuilder(
+      column: $state.table.weeklySessionsCompleted,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<DateTime> get weekStartDate => $state.composableBuilder(
+      column: $state.table.weekStartDate,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
 }
 
 class $$UserStatsTableTableOrderingComposer
@@ -7022,6 +7365,36 @@ class $$UserStatsTableTableOrderingComposer
 
   ColumnOrderings<DateTime> get todayResetDate => $state.composableBuilder(
       column: $state.table.todayResetDate,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<int> get streakFreezes => $state.composableBuilder(
+      column: $state.table.streakFreezes,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<int> get weeklyCardsGoal => $state.composableBuilder(
+      column: $state.table.weeklyCardsGoal,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<int> get weeklyCardsStudied => $state.composableBuilder(
+      column: $state.table.weeklyCardsStudied,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<int> get weeklySessionsGoal => $state.composableBuilder(
+      column: $state.table.weeklySessionsGoal,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<int> get weeklySessionsCompleted => $state.composableBuilder(
+      column: $state.table.weeklySessionsCompleted,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<DateTime> get weekStartDate => $state.composableBuilder(
+      column: $state.table.weekStartDate,
       builder: (column, joinBuilders) =>
           ColumnOrderings(column, joinBuilders: joinBuilders));
 }

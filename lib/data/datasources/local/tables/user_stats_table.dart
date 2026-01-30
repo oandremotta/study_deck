@@ -47,6 +47,26 @@ class UserStatsTable extends Table {
   /// Date when today counters were last reset.
   DateTimeColumn get todayResetDate => dateTime().nullable()();
 
+  // UC34: Streak freeze
+  /// Number of streak freezes available.
+  IntColumn get streakFreezes => integer().withDefault(const Constant(1))();
+
+  // UC33: Weekly challenges
+  /// Weekly cards goal.
+  IntColumn get weeklyCardsGoal => integer().withDefault(const Constant(100))();
+
+  /// Cards studied this week.
+  IntColumn get weeklyCardsStudied => integer().withDefault(const Constant(0))();
+
+  /// Weekly sessions goal.
+  IntColumn get weeklySessionsGoal => integer().withDefault(const Constant(7))();
+
+  /// Sessions completed this week.
+  IntColumn get weeklySessionsCompleted => integer().withDefault(const Constant(0))();
+
+  /// Start date of current week (Monday).
+  DateTimeColumn get weekStartDate => dateTime().nullable()();
+
   @override
   Set<Column> get primaryKey => {userId};
 }

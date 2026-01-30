@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -27,6 +28,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen>
   final _textController = TextEditingController();
   String _separator = ';';
   bool _isLoading = false;
+  bool _isLoadingFile = false;
+  String? _selectedFileName;
   List<_ParsedCard> _parsedCards = [];
 
   @override
@@ -87,19 +90,21 @@ class _ImportScreenState extends ConsumerState<ImportScreen>
             children: [
               Text('Separador:', style: context.textTheme.bodyMedium),
               const SizedBox(width: 16),
-              SegmentedButton<String>(
-                segments: const [
-                  ButtonSegment(value: ';', label: Text('; (ponto e virgula)')),
-                  ButtonSegment(value: '\t', label: Text('Tab')),
-                  ButtonSegment(value: ',', label: Text(', (virgula)')),
-                ],
-                selected: {_separator},
-                onSelectionChanged: (selection) {
-                  setState(() {
-                    _separator = selection.first;
-                    _parseText();
-                  });
-                },
+              Expanded(
+                child: SegmentedButton<String>(
+                  segments: const [
+                    ButtonSegment(value: ';', label: Text(';')),
+                    ButtonSegment(value: '\t', label: Text('Tab')),
+                    ButtonSegment(value: ',', label: Text(',')),
+                  ],
+                  selected: {_separator},
+                  onSelectionChanged: (selection) {
+                    setState(() {
+                      _separator = selection.first;
+                      _parseText();
+                    });
+                  },
+                ),
               ),
             ],
           ),
@@ -178,6 +183,115 @@ class _ImportScreenState extends ConsumerState<ImportScreen>
   }
 
   Widget _buildCsvImportTab() {
+    // If file is loaded and has parsed cards, show preview
+    if (_selectedFileName != null && _parsedCards.isNotEmpty) {
+      return SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.description),
+                title: Text(_selectedFileName!),
+                subtitle: Text('${_parsedCards.length} cards encontrados'),
+                trailing: IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () {
+                    setState(() {
+                      _selectedFileName = null;
+                      _parsedCards = [];
+                      _textController.clear();
+                    });
+                  },
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Text('Separador:', style: context.textTheme.bodyMedium),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: SegmentedButton<String>(
+                    segments: const [
+                      ButtonSegment(value: ';', label: Text(';')),
+                      ButtonSegment(value: '\t', label: Text('Tab')),
+                      ButtonSegment(value: ',', label: Text(',')),
+                    ],
+                    selected: {_separator},
+                    onSelectionChanged: (selection) {
+                      setState(() {
+                        _separator = selection.first;
+                        _parseText();
+                      });
+                    },
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Pre-visualizacao (${_parsedCards.length} cards):',
+              style: context.textTheme.titleSmall,
+            ),
+            const SizedBox(height: 8),
+            Container(
+              height: 250,
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: context.colorScheme.outlineVariant,
+                ),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: ListView.builder(
+                padding: const EdgeInsets.all(8),
+                itemCount: _parsedCards.length,
+                itemBuilder: (context, index) {
+                  final card = _parsedCards[index];
+                  return ListTile(
+                    dense: true,
+                    leading: Text(
+                      '${index + 1}',
+                      style: context.textTheme.bodySmall,
+                    ),
+                    title: Text(
+                      card.front,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    subtitle: Text(
+                      card.back,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    trailing: card.isValid
+                        ? Icon(Icons.check, color: context.colorScheme.primary)
+                        : Icon(Icons.error, color: context.colorScheme.error),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 16),
+            FilledButton(
+              onPressed: _isLoading || _parsedCards.isEmpty ? null : _importCards,
+              child: _isLoading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Text('Importar ${_parsedCards.where((c) => c.isValid).length} Cards'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Initial state - show file picker
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -194,24 +308,53 @@ class _ImportScreenState extends ConsumerState<ImportScreen>
           ),
           const SizedBox(height: 8),
           Text(
-            'Selecione um arquivo CSV com duas colunas:\nfrente e verso',
+            'Selecione um arquivo CSV ou TXT com duas colunas:\nfrente e verso',
             style: context.textTheme.bodyMedium?.copyWith(
               color: context.colorScheme.onSurfaceVariant,
             ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
-          OutlinedButton.icon(
-            onPressed: () {
-              // TODO: Implement file picker
-              context.showSnackBar('Funcao em desenvolvimento');
-            },
-            icon: const Icon(Icons.folder_open),
-            label: const Text('Selecionar Arquivo'),
-          ),
+          if (_isLoadingFile)
+            const CircularProgressIndicator()
+          else
+            OutlinedButton.icon(
+              onPressed: _pickCsvFile,
+              icon: const Icon(Icons.folder_open),
+              label: const Text('Selecionar Arquivo'),
+            ),
         ],
       ),
     );
+  }
+
+  Future<void> _pickCsvFile() async {
+    setState(() => _isLoadingFile = true);
+
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['csv', 'txt'],
+        withData: true,
+      );
+
+      if (result != null && result.files.single.bytes != null) {
+        final content = String.fromCharCodes(result.files.single.bytes!);
+        setState(() {
+          _selectedFileName = result.files.single.name;
+          _textController.text = content;
+        });
+        _parseText();
+      }
+    } catch (e) {
+      if (mounted) {
+        context.showErrorSnackBar('Erro ao ler arquivo: $e');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingFile = false);
+      }
+    }
   }
 
   void _parseText() {
@@ -239,26 +382,27 @@ class _ImportScreenState extends ConsumerState<ImportScreen>
 
     setState(() => _isLoading = true);
 
-    final notifier = ref.read(cardNotifierProvider.notifier);
-    final cards = validCards
-        .map((c) => entities.Card.create(
-              id: '',
-              deckId: widget.deckId,
-              front: c.front,
-              back: c.back,
-            ))
-        .toList();
+    try {
+      final repository = ref.read(cardRepositoryProvider);
+      final cards = validCards
+          .map((c) => entities.Card.create(
+                id: '',
+                deckId: widget.deckId,
+                front: c.front,
+                back: c.back,
+              ))
+          .toList();
 
-    final result = await notifier.createCards(cards);
+      final result = await createCardsDirect(repository, cards);
 
-    if (mounted) {
-      setState(() => _isLoading = false);
-
-      if (result != null) {
+      if (mounted) {
         context.showSnackBar('${result.length} cards importados');
         context.pop();
-      } else {
-        context.showErrorSnackBar('Erro ao importar cards');
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        context.showErrorSnackBar(e.toString().replaceFirst('Exception: ', ''));
       }
     }
   }

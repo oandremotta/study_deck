@@ -17,6 +17,14 @@ class UserStats extends Equatable {
   final int totalCardsStudied;
   final int totalSessionsCompleted;
   final Duration totalStudyTime;
+  // UC34: Streak freeze
+  final int streakFreezes;
+  // UC33: Weekly challenges
+  final int weeklyCardsGoal;
+  final int weeklyCardsStudied;
+  final int weeklySessionsGoal;
+  final int weeklySessionsCompleted;
+  final DateTime? weekStartDate;
 
   const UserStats({
     required this.userId,
@@ -32,10 +40,17 @@ class UserStats extends Equatable {
     required this.totalCardsStudied,
     required this.totalSessionsCompleted,
     required this.totalStudyTime,
+    this.streakFreezes = 0,
+    this.weeklyCardsGoal = 100,
+    this.weeklyCardsStudied = 0,
+    this.weeklySessionsGoal = 7,
+    this.weeklySessionsCompleted = 0,
+    this.weekStartDate,
   });
 
   /// Creates initial stats for a new user.
   factory UserStats.initial(String userId) {
+    final now = DateTime.now();
     return UserStats(
       userId: userId,
       totalXp: 0,
@@ -49,7 +64,19 @@ class UserStats extends Equatable {
       totalCardsStudied: 0,
       totalSessionsCompleted: 0,
       totalStudyTime: Duration.zero,
+      streakFreezes: 1, // Start with 1 free freeze
+      weeklyCardsGoal: 100,
+      weeklyCardsStudied: 0,
+      weeklySessionsGoal: 7,
+      weeklySessionsCompleted: 0,
+      weekStartDate: _getWeekStart(now),
     );
+  }
+
+  /// Gets the start of the week (Monday) for a given date.
+  static DateTime _getWeekStart(DateTime date) {
+    final daysFromMonday = date.weekday - 1;
+    return DateTime(date.year, date.month, date.day - daysFromMonday);
   }
 
   /// XP required to reach the next level.
@@ -70,6 +97,26 @@ class UserStats extends Equatable {
 
   /// Whether daily goal is met.
   bool get dailyGoalMet => todayCards >= dailyGoalCards || todayMinutes >= dailyGoalMinutes;
+
+  /// Weekly cards challenge progress (0-100).
+  double get weeklyCardsProgress =>
+      weeklyCardsGoal > 0 ? (weeklyCardsStudied / weeklyCardsGoal * 100).clamp(0, 100) : 0;
+
+  /// Weekly sessions challenge progress (0-100).
+  double get weeklySessionsProgress =>
+      weeklySessionsGoal > 0 ? (weeklySessionsCompleted / weeklySessionsGoal * 100).clamp(0, 100) : 0;
+
+  /// Whether weekly cards challenge is complete.
+  bool get weeklyCardsChallengeMet => weeklyCardsStudied >= weeklyCardsGoal;
+
+  /// Whether weekly sessions challenge is complete.
+  bool get weeklySessionsChallengeMet => weeklySessionsCompleted >= weeklySessionsGoal;
+
+  /// Whether both weekly challenges are complete.
+  bool get allWeeklyChallengesMet => weeklyCardsChallengeMet && weeklySessionsChallengeMet;
+
+  /// Whether user has streak freezes available.
+  bool get hasStreakFreeze => streakFreezes > 0;
 
   /// Whether streak is active today.
   bool get streakActiveToday {
@@ -121,6 +168,12 @@ class UserStats extends Equatable {
     final newTotalXp = totalXp + xpEarned;
     final newLevel = _levelForXp(newTotalXp);
 
+    // Update weekly progress
+    final currentWeekStart = _getWeekStart(now);
+    final isNewWeek = weekStartDate == null || !_isSameDay(weekStartDate!, currentWeekStart);
+    int newWeeklyCards = isNewWeek ? cardsReviewed : weeklyCardsStudied + cardsReviewed;
+    int newWeeklySessions = isNewWeek ? 1 : weeklySessionsCompleted + 1;
+
     return copyWith(
       totalXp: newTotalXp,
       level: newLevel,
@@ -132,6 +185,9 @@ class UserStats extends Equatable {
       totalCardsStudied: totalCardsStudied + cardsReviewed,
       totalSessionsCompleted: totalSessionsCompleted + 1,
       totalStudyTime: totalStudyTime + sessionTime,
+      weeklyCardsStudied: newWeeklyCards,
+      weeklySessionsCompleted: newWeeklySessions,
+      weekStartDate: currentWeekStart,
     );
   }
 
@@ -165,6 +221,12 @@ class UserStats extends Equatable {
     int? totalCardsStudied,
     int? totalSessionsCompleted,
     Duration? totalStudyTime,
+    int? streakFreezes,
+    int? weeklyCardsGoal,
+    int? weeklyCardsStudied,
+    int? weeklySessionsGoal,
+    int? weeklySessionsCompleted,
+    DateTime? weekStartDate,
   }) {
     return UserStats(
       userId: userId ?? this.userId,
@@ -180,6 +242,12 @@ class UserStats extends Equatable {
       totalCardsStudied: totalCardsStudied ?? this.totalCardsStudied,
       totalSessionsCompleted: totalSessionsCompleted ?? this.totalSessionsCompleted,
       totalStudyTime: totalStudyTime ?? this.totalStudyTime,
+      streakFreezes: streakFreezes ?? this.streakFreezes,
+      weeklyCardsGoal: weeklyCardsGoal ?? this.weeklyCardsGoal,
+      weeklyCardsStudied: weeklyCardsStudied ?? this.weeklyCardsStudied,
+      weeklySessionsGoal: weeklySessionsGoal ?? this.weeklySessionsGoal,
+      weeklySessionsCompleted: weeklySessionsCompleted ?? this.weeklySessionsCompleted,
+      weekStartDate: weekStartDate ?? this.weekStartDate,
     );
   }
 
@@ -223,7 +291,24 @@ class UserStats extends Equatable {
         totalCardsStudied,
         totalSessionsCompleted,
         totalStudyTime,
+        streakFreezes,
+        weeklyCardsGoal,
+        weeklyCardsStudied,
+        weeklySessionsGoal,
+        weeklySessionsCompleted,
+        weekStartDate,
       ];
+
+  /// Uses a streak freeze to prevent streak loss.
+  UserStats useStreakFreeze() {
+    if (streakFreezes <= 0) return this;
+    return copyWith(streakFreezes: streakFreezes - 1);
+  }
+
+  /// Adds streak freezes (e.g., as reward).
+  UserStats addStreakFreezes(int count) {
+    return copyWith(streakFreezes: streakFreezes + count);
+  }
 }
 
 /// Level information for display.

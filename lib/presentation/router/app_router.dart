@@ -19,6 +19,8 @@ import '../screens/cards/export_screen.dart';
 import '../screens/study/study_screen.dart';
 import '../screens/study/session_summary_screen.dart';
 import '../screens/tags/tag_management_screen.dart';
+import '../screens/stats/stats_screen.dart';
+import '../screens/settings/settings_screen.dart';
 import '../../domain/entities/study_session.dart';
 
 part 'app_router.g.dart';
@@ -41,6 +43,8 @@ abstract class AppRoutes {
   static const study = '/study';
   static const sessionSummary = '/study/summary';
   static const tags = '/tags';
+  static const stats = '/stats';
+  static const settings = '/settings';
 }
 
 /// Provider for the GoRouter instance.
@@ -173,6 +177,18 @@ GoRouter appRouter(Ref ref) {
         path: AppRoutes.tags,
         name: 'tags',
         builder: (context, state) => const TagManagementScreen(),
+      ),
+      // Stats routes
+      GoRoute(
+        path: AppRoutes.stats,
+        name: 'stats',
+        builder: (context, state) => const StatsScreen(),
+      ),
+      // Settings routes
+      GoRoute(
+        path: AppRoutes.settings,
+        name: 'settings',
+        builder: (context, state) => const SettingsScreen(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

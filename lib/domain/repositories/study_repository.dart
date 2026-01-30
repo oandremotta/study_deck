@@ -18,6 +18,9 @@ abstract class StudyRepository {
   /// Gets the current active session (in progress or paused).
   Future<Either<Failure, StudySession?>> getActiveSession();
 
+  /// Gets a session by its ID (for viewing completed sessions).
+  Future<Either<Failure, StudySession?>> getSessionById(String sessionId);
+
   /// Updates a study session.
   Future<Either<Failure, StudySession>> updateSession(StudySession session);
 
@@ -65,6 +68,17 @@ abstract class StudyRepository {
 
   /// Gets SRS statistics for a deck.
   Future<Either<Failure, DeckStudyStats>> getDeckStudyStats(String deckId);
+
+  /// Marks a card as mastered (UC27).
+  /// Mastered cards are excluded from regular reviews.
+  Future<Either<Failure, CardSRS>> markCardAsMastered(String cardId);
+
+  /// Resets a card's SRS progress (UC28).
+  /// Returns the card to "new" state.
+  Future<Either<Failure, CardSRS>> resetCardProgress(String cardId);
+
+  /// Resets all SRS progress for a deck (UC28).
+  Future<Either<Failure, void>> resetDeckProgress(String deckId);
 
   // ==================== User Stats ====================
 

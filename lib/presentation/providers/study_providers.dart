@@ -50,6 +50,16 @@ Future<StudySession?> activeSession(Ref ref) async {
   );
 }
 
+/// Provider for fetching a session by ID (for viewing completed sessions).
+/// Defined manually to avoid build_runner issues.
+final sessionByIdProvider = FutureProvider.family<StudySession?, String>((ref, sessionId) async {
+  final result = await ref.watch(studyRepositoryProvider).getSessionById(sessionId);
+  return result.fold(
+    (failure) => null,
+    (session) => session,
+  );
+});
+
 /// Provider for deck study stats.
 @riverpod
 Future<DeckStudyStats> deckStudyStats(Ref ref, String deckId) async {
@@ -80,7 +90,8 @@ Future<List<Card>> studyQueue(
 }
 
 /// Notifier for managing study sessions.
-@riverpod
+/// Uses keepAlive to preserve session state during navigation.
+@Riverpod(keepAlive: true)
 class StudyNotifier extends _$StudyNotifier {
   @override
   FutureOr<StudySession?> build() async {
@@ -182,8 +193,20 @@ class StudyNotifier extends _$StudyNotifier {
 
   /// Completes the current session.
   Future<StudySession?> completeSession() async {
-    final currentSession = state.valueOrNull;
-    if (currentSession == null) return null;
+    var currentSession = state.valueOrNull;
+
+    // If state is null, try to fetch active session from DB
+    if (currentSession == null) {
+      final repository = ref.read(studyRepositoryProvider);
+      final activeResult = await repository.getActiveSession();
+      currentSession = activeResult.fold(
+        (failure) => null,
+        (session) => session,
+      );
+      if (currentSession == null) {
+        return null;
+      }
+    }
 
     final repository = ref.read(studyRepositoryProvider);
     final result = await repository.completeSession(currentSession.id);
@@ -204,6 +227,44 @@ class StudyNotifier extends _$StudyNotifier {
   void clearSession() {
     state = const AsyncData(null);
   }
+}
+
+// ==================== Direct Functions (avoid "Future already completed") ====================
+
+/// Marks a card as mastered (UC27).
+Future<CardSRS> markCardAsMasteredDirect(
+  StudyRepository repository,
+  String cardId,
+) async {
+  final result = await repository.markCardAsMastered(cardId);
+  return result.fold(
+    (failure) => throw Exception(failure.message),
+    (srs) => srs,
+  );
+}
+
+/// Resets a card's SRS progress (UC28).
+Future<CardSRS> resetCardProgressDirect(
+  StudyRepository repository,
+  String cardId,
+) async {
+  final result = await repository.resetCardProgress(cardId);
+  return result.fold(
+    (failure) => throw Exception(failure.message),
+    (srs) => srs,
+  );
+}
+
+/// Resets all SRS progress for a deck (UC28).
+Future<void> resetDeckProgressDirect(
+  StudyRepository repository,
+  String deckId,
+) async {
+  final result = await repository.resetDeckProgress(deckId);
+  return result.fold(
+    (failure) => throw Exception(failure.message),
+    (_) {},
+  );
 }
 
 /// Notifier for updating user goals.

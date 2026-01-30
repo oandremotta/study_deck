@@ -198,6 +198,9 @@ enum StudyMode {
 
   /// Quick 3-minute session (turbo mode).
   turbo,
+
+  /// Random shuffle - ignores SRS scheduling (UC26).
+  shuffle,
 }
 
 extension StudyModeExtension on StudyMode {
@@ -213,6 +216,8 @@ extension StudyModeExtension on StudyMode {
         return 'Apenas erros';
       case StudyMode.turbo:
         return 'Modo Turbo (3 min)';
+      case StudyMode.shuffle:
+        return 'Modo Aleatorio';
     }
   }
 
@@ -228,6 +233,8 @@ extension StudyModeExtension on StudyMode {
         return 'Cards que voce errou recentemente';
       case StudyMode.turbo:
         return 'Sessao rapida de ~12 cards em 3 minutos';
+      case StudyMode.shuffle:
+        return 'Cards embaralhados, ignora algoritmo SRS';
     }
   }
 }

@@ -57,6 +57,11 @@ dependencies:
   uuid: ^4.4.0
   equatable: ^2.0.5
   connectivity_plus: ^6.0.3
+  shared_preferences: ^2.2.3
+
+  # Import/Export
+  file_picker: ^8.0.0+1
+  share_plus: ^10.0.0
 
 dev_dependencies:
   flutter_test:

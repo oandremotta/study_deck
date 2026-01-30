@@ -388,3 +388,15 @@ Future<void> permanentlyDeleteCardDirect(CardRepository repository, String id) a
     (_) {},
   );
 }
+
+/// Creates multiple cards directly via repository.
+Future<List<Card>> createCardsDirect(
+  CardRepository repository,
+  List<Card> cards,
+) async {
+  final result = await repository.createCards(cards);
+  return result.fold(
+    (failure) => throw Exception(failure.message),
+    (createdCards) => createdCards,
+  );
+}

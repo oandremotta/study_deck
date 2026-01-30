@@ -11,7 +11,10 @@
       "Bash(cmd.exe /c \"cd /d c:\\\\workspace\\\\tech-attom\\\\study_deck && flutter pub run build_runner build --delete-conflicting-outputs 2>&1\")",
       "Bash(/c/dev/flutter/bin/flutter.bat pub run build_runner build:*)",
       "Bash(ls:*)",
-      "Bash(flutter analyze:*)"
+      "Bash(flutter analyze:*)",
+      "Bash(flutter clean:*)",
+      "Bash(flutter build:*)",
+      "Bash(/c/dev/flutter/bin/flutter.bat analyze:*)"
     ]
   }
 }

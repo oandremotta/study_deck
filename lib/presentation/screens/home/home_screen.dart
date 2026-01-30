@@ -114,10 +114,7 @@ class HomeScreen extends ConsumerWidget {
                   child: _ActionCard(
                     icon: Icons.bar_chart_rounded,
                     label: 'Estatisticas',
-                    onTap: () {
-                      // TODO: Navigate to stats
-                      context.showSnackBar('Estatisticas - em breve!');
-                    },
+                    onTap: () => context.push(AppRoutes.stats),
                   ),
                 ),
               ],
@@ -135,6 +132,16 @@ class HomeScreen extends ConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // Settings option (UC36)
+            ListTile(
+              leading: const Icon(Icons.settings_outlined),
+              title: const Text('Configuracoes'),
+              onTap: () {
+                Navigator.pop(context);
+                context.push(AppRoutes.settings);
+              },
+            ),
+            const Divider(),
             if (isAnonymous)
               ListTile(
                 leading: const Icon(Icons.login),

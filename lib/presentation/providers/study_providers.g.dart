@@ -420,14 +420,15 @@ class _StudyQueueProviderElement
   int? get limit => (origin as StudyQueueProvider).limit;
 }
 
-String _$studyNotifierHash() => r'eed7c9abfe9df0b9ca852c96456a49288025a634';
+String _$studyNotifierHash() => r'f0eb8a1e03025aa1e0dede7c6b090086cae6929b';
 
 /// Notifier for managing study sessions.
+/// Uses keepAlive to preserve session state during navigation.
 ///
 /// Copied from [StudyNotifier].
 @ProviderFor(StudyNotifier)
 final studyNotifierProvider =
-    AutoDisposeAsyncNotifierProvider<StudyNotifier, StudySession?>.internal(
+    AsyncNotifierProvider<StudyNotifier, StudySession?>.internal(
   StudyNotifier.new,
   name: r'studyNotifierProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
@@ -437,7 +438,7 @@ final studyNotifierProvider =
   allTransitiveDependencies: null,
 );
 
-typedef _$StudyNotifier = AutoDisposeAsyncNotifier<StudySession?>;
+typedef _$StudyNotifier = AsyncNotifier<StudySession?>;
 String _$userGoalsNotifierHash() => r'3f0bc4bc7f462db5a7e2b785339b26401db5b682';
 
 /// Notifier for updating user goals.

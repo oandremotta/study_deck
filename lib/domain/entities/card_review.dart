@@ -267,6 +267,9 @@ enum SRSState {
 
   /// Card is in regular review cycle.
   review,
+
+  /// Card is mastered (UC27) - excluded from regular reviews.
+  mastered,
 }
 
 extension SRSStateExtension on SRSState {
@@ -278,6 +281,8 @@ extension SRSStateExtension on SRSState {
         return 'Aprendendo';
       case SRSState.review:
         return 'Revisando';
+      case SRSState.mastered:
+        return 'Dominado';
     }
   }
 }

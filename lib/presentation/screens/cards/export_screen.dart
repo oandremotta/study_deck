@@ -1,10 +1,16 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../core/extensions/context_extensions.dart';
 import '../../providers/card_providers.dart';
 import '../../providers/deck_providers.dart';
+
+// Web-specific imports
+import 'export_screen_web.dart' if (dart.library.io) 'export_screen_stub.dart'
+    as web_export;
 
 /// Screen for exporting a deck to CSV or text.
 ///
@@ -171,12 +177,9 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
                 ),
                 const SizedBox(height: 12),
                 OutlinedButton.icon(
-                  onPressed: () {
-                    // TODO: Implement file save
-                    context.showSnackBar('Funcao em desenvolvimento');
-                  },
-                  icon: const Icon(Icons.download),
-                  label: const Text('Salvar como arquivo CSV'),
+                  onPressed: () => _saveOrShare(context),
+                  icon: Icon(kIsWeb ? Icons.download : Icons.share),
+                  label: Text(kIsWeb ? 'Baixar arquivo CSV' : 'Compartilhar arquivo'),
                 ),
               ],
             ),
@@ -189,5 +192,40 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
   void _copyToClipboard(BuildContext context) {
     Clipboard.setData(ClipboardData(text: _exportedText));
     context.showSnackBar('Copiado para area de transferencia');
+  }
+
+  Future<void> _saveOrShare(BuildContext context) async {
+    if (_exportedText.isEmpty) return;
+
+    final deckAsync = ref.read(deckByIdProvider(widget.deckId));
+    final deckName = deckAsync.valueOrNull?.name ?? 'deck';
+    final fileName = '${deckName.replaceAll(' ', '_')}_export.csv';
+
+    try {
+      if (kIsWeb) {
+        // Web: Download file
+        web_export.downloadFile(_exportedText, fileName);
+        if (mounted) {
+          ScaffoldMessenger.of(this.context).showSnackBar(
+            const SnackBar(content: Text('Arquivo baixado')),
+          );
+        }
+      } else {
+        // Mobile: Share file
+        await Share.share(
+          _exportedText,
+          subject: 'Exportação do deck: $deckName',
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(this.context).showSnackBar(
+          SnackBar(
+            content: Text('Erro ao exportar: $e'),
+            backgroundColor: Theme.of(this.context).colorScheme.error,
+          ),
+        );
+      }
+    }
   }
 }

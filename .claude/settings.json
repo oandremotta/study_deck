@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(flutter analyze lib/presentation/providers/study_providers.dart)"
+      "Bash(flutter analyze lib/presentation/providers/study_providers.dart)",
+      "Bash(/c/dev/flutter/bin/flutter.bat pub get:*)"
     ]
   }
 }

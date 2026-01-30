@@ -50,7 +50,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration {
@@ -71,6 +71,27 @@ class AppDatabase extends _$AppDatabase {
           await m.createTable(cardSrsTable);
           await m.createTable(cardReviewTable);
           await m.createTable(userStatsTable);
+        }
+        if (from < 4) {
+          // Add UC33/UC34 columns to user_stats
+          await customStatement(
+            'ALTER TABLE user_stats ADD COLUMN streak_freezes INTEGER NOT NULL DEFAULT 1',
+          );
+          await customStatement(
+            'ALTER TABLE user_stats ADD COLUMN weekly_cards_goal INTEGER NOT NULL DEFAULT 100',
+          );
+          await customStatement(
+            'ALTER TABLE user_stats ADD COLUMN weekly_cards_studied INTEGER NOT NULL DEFAULT 0',
+          );
+          await customStatement(
+            'ALTER TABLE user_stats ADD COLUMN weekly_sessions_goal INTEGER NOT NULL DEFAULT 7',
+          );
+          await customStatement(
+            'ALTER TABLE user_stats ADD COLUMN weekly_sessions_completed INTEGER NOT NULL DEFAULT 0',
+          );
+          await customStatement(
+            'ALTER TABLE user_stats ADD COLUMN week_start_date INTEGER',
+          );
         }
       },
     );

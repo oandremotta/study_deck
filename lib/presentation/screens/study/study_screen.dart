@@ -31,6 +31,9 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
   bool _showAnswer = false;
   DateTime? _cardStartTime;
   final List<String> _reinsertQueue = []; // Cards to repeat (UC28)
+  bool _isLoadingQueue = true;
+  String? _loadError;
+  bool _isFinishing = false; // Prevent multiple finishSession calls
 
   @override
   void initState() {
@@ -39,33 +42,58 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
   }
 
   Future<void> _loadQueue() async {
-    final result = await ref.read(studyRepositoryProvider).getStudyQueue(
-      deckId: widget.deckId,
-      mode: widget.mode,
-      limit: widget.mode == StudyMode.turbo ? 12 : null,
-    );
+    debugPrint('StudyScreen: _loadQueue started, deckId=${widget.deckId}, mode=${widget.mode}');
+    try {
+      final result = await ref.read(studyRepositoryProvider).getStudyQueue(
+        deckId: widget.deckId,
+        mode: widget.mode,
+        limit: widget.mode == StudyMode.turbo ? 12 : null,
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          debugPrint('StudyScreen: getStudyQueue TIMEOUT');
+          throw Exception('Timeout ao carregar cards');
+        },
+      );
 
-    result.fold(
-      (failure) {
-        if (mounted) {
-          context.showErrorSnackBar('Erro ao carregar cards: ${failure.message}');
-          context.pop();
-        }
-      },
-      (cards) {
-        if (cards.isEmpty) {
-          if (mounted) {
+      debugPrint('StudyScreen: getStudyQueue completed');
+
+      if (!mounted) {
+        debugPrint('StudyScreen: widget not mounted, returning');
+        return;
+      }
+
+      result.fold(
+        (failure) {
+          debugPrint('StudyScreen: getStudyQueue failed: ${failure.message}');
+          setState(() {
+            _isLoadingQueue = false;
+            _loadError = failure.message;
+          });
+        },
+        (cards) {
+          debugPrint('StudyScreen: getStudyQueue success, ${cards.length} cards');
+          if (cards.isEmpty) {
             context.showSnackBar('Nenhum card para estudar!');
             context.pop();
+            return;
           }
-          return;
-        }
+          setState(() {
+            _queue = cards;
+            _cardStartTime = DateTime.now();
+            _isLoadingQueue = false;
+          });
+        },
+      );
+    } catch (e) {
+      debugPrint('StudyScreen: _loadQueue exception: $e');
+      if (mounted) {
         setState(() {
-          _queue = cards;
-          _cardStartTime = DateTime.now();
+          _isLoadingQueue = false;
+          _loadError = e.toString();
         });
-      },
-    );
+      }
+    }
   }
 
   entities.Card? get _currentCard {
@@ -113,11 +141,32 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
   }
 
   Future<void> _finishSession() async {
-    final session = await ref.read(studyNotifierProvider.notifier).completeSession();
-    if (session != null && mounted) {
-      context.pushReplacement(
-        '${AppRoutes.sessionSummary}/${session.id}',
-      );
+    // Prevent multiple calls
+    if (_isFinishing) {
+      debugPrint('_finishSession: already finishing, skipping');
+      return;
+    }
+    _isFinishing = true;
+    debugPrint('_finishSession: starting...');
+    try {
+      final session = await ref.read(studyNotifierProvider.notifier).completeSession();
+      debugPrint('_finishSession: completeSession returned session=${session?.id}');
+      if (session != null && mounted) {
+        context.pushReplacement(
+          '${AppRoutes.sessionSummary}?sessionId=${session.id}',
+        );
+      } else if (mounted) {
+        // Fallback: go back if session couldn't be completed
+        debugPrint('_finishSession: session is null, going back to home');
+        context.showSnackBar('Sessao finalizada');
+        context.go(AppRoutes.home);
+      }
+    } catch (e) {
+      debugPrint('_finishSession: error: $e');
+      if (mounted) {
+        context.showErrorSnackBar('Erro ao finalizar: $e');
+        context.go(AppRoutes.home);
+      }
     }
   }
 
@@ -130,7 +179,6 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final sessionAsync = ref.watch(studyNotifierProvider);
     final card = _currentCard;
 
     return Scaffold(
@@ -145,30 +193,92 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
             _buildTurboTimer(),
         ],
       ),
-      body: sessionAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Erro: $e')),
-        data: (session) {
-          if (card == null) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: _buildBody(card),
+    );
+  }
 
-          return Column(
-            children: [
-              // Progress bar
-              _buildProgressBar(session),
+  Widget _buildBody(entities.Card? card) {
+    debugPrint('_buildBody: loading=$_isLoadingQueue, error=$_loadError, queueLen=${_queue.length}, index=$_currentIndex, card=${card?.id}');
 
-              // Card content
-              Expanded(
-                child: _buildCardContent(card),
-              ),
+    // Show error if queue loading failed
+    if (_loadError != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 48, color: Colors.red),
+            const SizedBox(height: 16),
+            Text('Erro ao carregar cards:\n$_loadError', textAlign: TextAlign.center),
+            const SizedBox(height: 16),
+            FilledButton(
+              onPressed: () => context.pop(),
+              child: const Text('Voltar'),
+            ),
+          ],
+        ),
+      );
+    }
 
-              // Action buttons
-              _buildActionButtons(),
-            ],
-          );
-        },
-      ),
+    // Show loading while queue is loading
+    if (_isLoadingQueue) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('Carregando cards...'),
+          ],
+        ),
+      );
+    }
+
+    // If queue loaded but no card, all cards were reviewed - finish session
+    if (card == null && _queue.isNotEmpty) {
+      debugPrint('All cards reviewed, finishing session...');
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _finishSession();
+      });
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('Finalizando sessao...'),
+          ],
+        ),
+      );
+    }
+
+    // Empty queue - shouldn't happen, go back
+    if (card == null) {
+      debugPrint('No cards available, going back...');
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          context.showSnackBar('Nenhum card disponivel');
+          context.pop();
+        }
+      });
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    // Get session for progress bar - only watch when we need it
+    final session = ref.watch(studyNotifierProvider).valueOrNull;
+
+    return Column(
+      children: [
+        // Progress bar
+        _buildProgressBar(session),
+
+        // Card content
+        Expanded(
+          child: _buildCardContent(card),
+        ),
+
+        // Action buttons
+        _buildActionButtons(),
+      ],
     );
   }
 
