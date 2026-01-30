@@ -51,46 +51,28 @@ class SessionSummaryScreen extends ConsumerWidget {
     StudySession session,
     UserStats? stats,
   ) {
+    // UC50 & UC51: Determine celebration level
+    final celebrationInfo = _getCelebrationInfo(stats);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
         children: [
           const SizedBox(height: 32),
 
-          // Celebration icon
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: context.colorScheme.primaryContainer,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.celebration,
-              size: 64,
-              color: context.colorScheme.onPrimaryContainer,
-            ),
-          ),
-
-          const SizedBox(height: 24),
-
-          // Title
-          Text(
-            'Sessao Concluida!',
-            style: context.textTheme.headlineMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          const SizedBox(height: 8),
-
-          Text(
-            session.mode.displayName,
-            style: context.textTheme.bodyLarge?.copyWith(
-              color: context.colorScheme.onSurfaceVariant,
-            ),
+          // UC50: Enhanced celebration based on achievement
+          _CelebrationHeader(
+            celebrationInfo: celebrationInfo,
+            sessionMode: session.mode.displayName,
           ),
 
           const SizedBox(height: 32),
+
+          // UC51: Milestone achievement cards
+          if (celebrationInfo.milestone != null)
+            _MilestoneCard(milestone: celebrationInfo.milestone!),
+
+          if (celebrationInfo.milestone != null) const SizedBox(height: 16),
 
           // Stats cards
           _buildStatsGrid(context, session, stats),
@@ -111,6 +93,65 @@ class SessionSummaryScreen extends ConsumerWidget {
           _buildActionButtons(context, ref, session),
         ],
       ),
+    );
+  }
+
+  _CelebrationInfo _getCelebrationInfo(UserStats? stats) {
+    if (stats == null) {
+      return const _CelebrationInfo(
+        icon: Icons.celebration,
+        title: 'Sessao Concluida!',
+        subtitle: 'Continue assim!',
+        color: null,
+        milestone: null,
+      );
+    }
+
+    // UC50: Check if daily goal was just met
+    if (stats.dailyGoalMet) {
+      return _CelebrationInfo(
+        icon: Icons.emoji_events,
+        title: 'Meta Diaria Alcancada!',
+        subtitle: 'Voce completou ${stats.todayCards} cards hoje!',
+        color: Colors.amber,
+        milestone: _Milestone.dailyGoal,
+      );
+    }
+
+    // UC51: Check progress milestones
+    final progress = stats.dailyCardProgress;
+    if (progress >= 75) {
+      return const _CelebrationInfo(
+        icon: Icons.trending_up,
+        title: 'Quase la!',
+        subtitle: 'Falta pouco para a meta diaria!',
+        color: Colors.orange,
+        milestone: _Milestone.progress75,
+      );
+    } else if (progress >= 50) {
+      return const _CelebrationInfo(
+        icon: Icons.star_half,
+        title: 'Metade do Caminho!',
+        subtitle: 'Continue, voce esta indo muito bem!',
+        color: Colors.blue,
+        milestone: _Milestone.progress50,
+      );
+    } else if (progress >= 25) {
+      return const _CelebrationInfo(
+        icon: Icons.rocket_launch,
+        title: 'Bom Comeco!',
+        subtitle: 'Ja completou 25% da meta!',
+        color: Colors.green,
+        milestone: _Milestone.progress25,
+      );
+    }
+
+    return const _CelebrationInfo(
+      icon: Icons.celebration,
+      title: 'Sessao Concluida!',
+      subtitle: 'Continue estudando!',
+      color: null,
+      milestone: null,
     );
   }
 
@@ -308,8 +349,25 @@ class SessionSummaryScreen extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Study more button
+        // UC72: Primary CTA - "Mais 3 minutos" quick session
         FilledButton.icon(
+          onPressed: () {
+            ref.read(studyNotifierProvider.notifier).clearSession();
+            context.pushReplacement(
+              '${AppRoutes.study}?mode=turbo${session.deckId != null ? '&deckId=${session.deckId}' : ''}',
+            );
+          },
+          icon: const Icon(Icons.bolt),
+          label: const Text('Mais 3 minutos'),
+          style: FilledButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+          ),
+        ),
+
+        const SizedBox(height: 12),
+
+        // Study more with same mode (secondary option)
+        OutlinedButton.icon(
           onPressed: () {
             ref.read(studyNotifierProvider.notifier).clearSession();
             context.pushReplacement(
@@ -317,23 +375,12 @@ class SessionSummaryScreen extends ConsumerWidget {
             );
           },
           icon: const Icon(Icons.replay),
-          label: const Text('Estudar mais'),
-        ),
-
-        const SizedBox(height: 12),
-
-        // Turbo mode suggestion
-        if (session.mode != StudyMode.turbo)
-          OutlinedButton.icon(
-            onPressed: () {
-              ref.read(studyNotifierProvider.notifier).clearSession();
-              context.pushReplacement(
-                '${AppRoutes.study}?mode=turbo${session.deckId != null ? '&deckId=${session.deckId}' : ''}',
-              );
-            },
-            icon: const Icon(Icons.bolt),
-            label: const Text('Modo Turbo (3 min)'),
+          label: Text(
+            session.mode == StudyMode.turbo
+                ? 'Mais uma sessao rapida'
+                : 'Continuar estudando',
           ),
+        ),
 
         const SizedBox(height: 12),
 
@@ -356,5 +403,175 @@ class SessionSummaryScreen extends ConsumerWidget {
       return '${minutes}m ${seconds}s';
     }
     return '${seconds}s';
+  }
+}
+
+// ==================== UC50 & UC51: Celebration Components ====================
+
+/// Milestone types for progress tracking.
+enum _Milestone {
+  progress25,
+  progress50,
+  progress75,
+  dailyGoal,
+}
+
+/// Info for celebration display.
+class _CelebrationInfo {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Color? color;
+  final _Milestone? milestone;
+
+  const _CelebrationInfo({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    this.color,
+    this.milestone,
+  });
+}
+
+/// UC50: Enhanced celebration header based on achievement.
+class _CelebrationHeader extends StatelessWidget {
+  final _CelebrationInfo celebrationInfo;
+  final String sessionMode;
+
+  const _CelebrationHeader({
+    required this.celebrationInfo,
+    required this.sessionMode,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = celebrationInfo.color ?? context.colorScheme.primary;
+
+    return Column(
+      children: [
+        // Animated celebration icon
+        TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0.0, end: 1.0),
+          duration: const Duration(milliseconds: 600),
+          curve: Curves.elasticOut,
+          builder: (context, value, child) {
+            return Transform.scale(
+              scale: value,
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  celebrationInfo.icon,
+                  size: 64,
+                  color: color,
+                ),
+              ),
+            );
+          },
+        ),
+        const SizedBox(height: 24),
+        // Title with fade in
+        TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0.0, end: 1.0),
+          duration: const Duration(milliseconds: 400),
+          builder: (context, value, child) {
+            return Opacity(
+              opacity: value,
+              child: Text(
+                celebrationInfo.title,
+                style: context.textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: celebrationInfo.milestone == _Milestone.dailyGoal
+                      ? color
+                      : null,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            );
+          },
+        ),
+        const SizedBox(height: 8),
+        Text(
+          celebrationInfo.subtitle,
+          style: context.textTheme.bodyLarge?.copyWith(
+            color: context.colorScheme.onSurfaceVariant,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 4),
+        Text(
+          sessionMode,
+          style: context.textTheme.bodySmall?.copyWith(
+            color: context.colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// UC51: Milestone achievement card.
+class _MilestoneCard extends StatelessWidget {
+  final _Milestone milestone;
+
+  const _MilestoneCard({required this.milestone});
+
+  @override
+  Widget build(BuildContext context) {
+    final (message, icon, color) = _getMilestoneDetails();
+
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 500),
+      builder: (context, value, child) {
+        return Transform.translate(
+          offset: Offset(0, 20 * (1 - value)),
+          child: Opacity(
+            opacity: value,
+            child: Card(
+              color: color.withValues(alpha: 0.1),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(icon, color: color, size: 20),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        message,
+                        style: context.textTheme.bodyMedium?.copyWith(
+                          color: color,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  (String, IconData, Color) _getMilestoneDetails() {
+    switch (milestone) {
+      case _Milestone.dailyGoal:
+        return ('Meta diaria conquistada!', Icons.emoji_events, Colors.amber.shade700);
+      case _Milestone.progress75:
+        return ('75% da meta - quase la!', Icons.trending_up, Colors.orange);
+      case _Milestone.progress50:
+        return ('50% da meta - continue!', Icons.star_half, Colors.blue);
+      case _Milestone.progress25:
+        return ('25% da meta - bom inicio!', Icons.rocket_launch, Colors.green);
+    }
   }
 }

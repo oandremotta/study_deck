@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/extensions/context_extensions.dart';
+import '../../../core/utils/either.dart';
 import '../../../domain/entities/card.dart' as entities;
 import '../../../domain/entities/study_session.dart';
 import '../../providers/study_providers.dart';
@@ -63,28 +65,39 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
         return;
       }
 
-      result.fold(
-        (failure) {
+      switch (result) {
+        case Left(value: final failure):
           debugPrint('StudyScreen: getStudyQueue failed: ${failure.message}');
           setState(() {
             _isLoadingQueue = false;
             _loadError = failure.message;
           });
-        },
-        (cards) {
+          return;
+
+        case Right(value: final cards):
           debugPrint('StudyScreen: getStudyQueue success, ${cards.length} cards');
           if (cards.isEmpty) {
             context.showSnackBar('Nenhum card para estudar!');
             context.pop();
             return;
           }
+
+          // Start a study session
+          debugPrint('StudyScreen: starting study session...');
+          final session = await ref.read(studyNotifierProvider.notifier).startSession(
+            deckId: widget.deckId,
+            mode: widget.mode,
+          );
+          debugPrint('StudyScreen: session started: ${session?.id}');
+
+          if (!mounted) return;
+
           setState(() {
             _queue = cards;
             _cardStartTime = DateTime.now();
             _isLoadingQueue = false;
           });
-        },
-      );
+      }
     } catch (e) {
       debugPrint('StudyScreen: _loadQueue exception: $e');
       if (mounted) {
@@ -349,7 +362,13 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
 
   Widget _buildCardContent(entities.Card card) {
     return GestureDetector(
-      onTap: _showAnswer ? null : _showAnswerCard,
+      onTap: _showAnswer
+          ? null
+          : () {
+              // UC69: Haptic feedback on card tap
+              HapticFeedback.selectionClick();
+              _showAnswerCard();
+            },
       child: Container(
         margin: const EdgeInsets.all(16),
         child: Card(
@@ -435,7 +454,11 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
       return Padding(
         padding: const EdgeInsets.all(16),
         child: FilledButton.icon(
-          onPressed: _showAnswerCard,
+          onPressed: () {
+            // UC69: Haptic feedback on reveal
+            HapticFeedback.selectionClick();
+            _showAnswerCard();
+          },
           icon: const Icon(Icons.visibility),
           label: const Text('Ver Resposta'),
         ),
@@ -484,7 +507,21 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
     IconData icon,
   ) {
     return ElevatedButton(
-      onPressed: () => _recordAnswer(result),
+      onPressed: () {
+        // UC69: Haptic feedback based on result
+        switch (result) {
+          case ReviewResult.correct:
+            HapticFeedback.lightImpact();
+            break;
+          case ReviewResult.almost:
+            HapticFeedback.mediumImpact();
+            break;
+          case ReviewResult.wrong:
+            HapticFeedback.heavyImpact();
+            break;
+        }
+        _recordAnswer(result);
+      },
       style: ElevatedButton.styleFrom(
         backgroundColor: color.withValues(alpha: 0.1),
         foregroundColor: color,

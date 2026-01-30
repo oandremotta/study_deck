@@ -63,6 +63,10 @@ class _StatsContent extends ConsumerWidget {
         _StreakCard(stats: stats),
         const SizedBox(height: 16),
 
+        // UC74/UC75: Weekly Activity Heatmap
+        _WeeklyActivityCard(stats: stats),
+        const SizedBox(height: 16),
+
         // Weekly Challenges Card (UC33)
         _WeeklyChallengesCard(stats: stats),
         const SizedBox(height: 16),
@@ -281,6 +285,248 @@ class _StreakCard extends StatelessWidget {
     if (dateDay == today) return 'Hoje';
     if (dateDay == today.subtract(const Duration(days: 1))) return 'Ontem';
     return '${date.day}/${date.month}/${date.year}';
+  }
+}
+
+/// UC74/UC75: Weekly activity heatmap card.
+class _WeeklyActivityCard extends StatelessWidget {
+  final UserStats stats;
+
+  const _WeeklyActivityCard({required this.stats});
+
+  @override
+  Widget build(BuildContext context) {
+    final today = DateTime.now();
+    final weekDays = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'];
+
+    // Build last 7 days activity (we'll infer from streak and last study date)
+    final activityDays = _buildActivityDays(today);
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.calendar_view_week,
+                  color: context.colorScheme.primary,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Atividade da semana',
+                  style: context.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // Heatmap grid
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: List.generate(7, (index) {
+                final dayInfo = activityDays[index];
+                return _HeatmapDay(
+                  label: weekDays[(today.weekday - 7 + index) % 7],
+                  date: dayInfo.date,
+                  hasActivity: dayInfo.hasActivity,
+                  isToday: dayInfo.isToday,
+                  intensity: dayInfo.intensity,
+                );
+              }),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Weekly summary stats
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _WeeklyStat(
+                  label: 'Dias ativos',
+                  value: '${activityDays.where((d) => d.hasActivity).length}/7',
+                  icon: Icons.check_circle_outline,
+                  color: Colors.green,
+                ),
+                _WeeklyStat(
+                  label: 'Cards esta semana',
+                  value: '${stats.weeklyCardsStudied}',
+                  icon: Icons.style,
+                  color: context.colorScheme.primary,
+                ),
+                _WeeklyStat(
+                  label: 'Sessoes',
+                  value: '${stats.weeklySessionsCompleted}',
+                  icon: Icons.playlist_add_check,
+                  color: context.colorScheme.secondary,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  List<_DayActivity> _buildActivityDays(DateTime today) {
+    final days = <_DayActivity>[];
+
+    for (int i = 6; i >= 0; i--) {
+      final date = today.subtract(Duration(days: i));
+      final isToday = i == 0;
+
+      // Determine if this day had activity based on streak and last study date
+      bool hasActivity = false;
+      double intensity = 0.0;
+
+      if (stats.lastStudyDate != null) {
+        final lastStudy = stats.lastStudyDate!;
+        final daysSinceLastStudy = today.difference(lastStudy).inDays;
+
+        // If within streak range, mark as active
+        if (i <= daysSinceLastStudy && i < stats.currentStreak) {
+          // This day was within the streak
+          hasActivity = true;
+          intensity = 0.7;
+        } else if (_isSameDay(date, lastStudy)) {
+          hasActivity = true;
+          intensity = 1.0;
+        } else if (isToday && stats.todayCards > 0) {
+          hasActivity = true;
+          intensity = (stats.todayCards / stats.dailyGoalCards).clamp(0.3, 1.0);
+        }
+      }
+
+      // Special case: if today has cards, mark today as active
+      if (isToday && stats.todayCards > 0) {
+        hasActivity = true;
+        intensity = (stats.todayCards / stats.dailyGoalCards).clamp(0.3, 1.0);
+      }
+
+      days.add(_DayActivity(
+        date: date,
+        hasActivity: hasActivity,
+        isToday: isToday,
+        intensity: intensity,
+      ));
+    }
+
+    return days;
+  }
+
+  bool _isSameDay(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
+  }
+}
+
+class _DayActivity {
+  final DateTime date;
+  final bool hasActivity;
+  final bool isToday;
+  final double intensity;
+
+  const _DayActivity({
+    required this.date,
+    required this.hasActivity,
+    required this.isToday,
+    required this.intensity,
+  });
+}
+
+class _HeatmapDay extends StatelessWidget {
+  final String label;
+  final DateTime date;
+  final bool hasActivity;
+  final bool isToday;
+  final double intensity;
+
+  const _HeatmapDay({
+    required this.label,
+    required this.date,
+    required this.hasActivity,
+    required this.isToday,
+    required this.intensity,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final baseColor = hasActivity ? Colors.green : context.colorScheme.surfaceContainerHighest;
+    final displayColor = hasActivity
+        ? Color.lerp(Colors.green.shade200, Colors.green.shade700, intensity)!
+        : baseColor;
+
+    return Column(
+      children: [
+        Text(
+          label,
+          style: context.textTheme.labelSmall?.copyWith(
+            color: context.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: displayColor,
+            borderRadius: BorderRadius.circular(8),
+            border: isToday
+                ? Border.all(color: context.colorScheme.primary, width: 2)
+                : null,
+          ),
+          child: Center(
+            child: Text(
+              '${date.day}',
+              style: context.textTheme.labelMedium?.copyWith(
+                color: hasActivity ? Colors.white : context.colorScheme.onSurfaceVariant,
+                fontWeight: isToday ? FontWeight.bold : null,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _WeeklyStat extends StatelessWidget {
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color color;
+
+  const _WeeklyStat({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Icon(icon, color: color, size: 20),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: context.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+        Text(
+          label,
+          style: context.textTheme.labelSmall?.copyWith(
+            color: context.colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ],
+    );
   }
 }
 

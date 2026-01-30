@@ -264,10 +264,12 @@ class _StudyHeader extends ConsumerWidget {
               padding: const EdgeInsets.only(bottom: 12),
               child: Column(
                 children: [
-                  // Mastery progress bar
+                  // Mastery progress bar with completion estimate (UC57)
                   _MasteryProgress(
                     masteryPercent: stats.masteryPercent,
                     totalCards: stats.totalCards,
+                    newCards: stats.newCards,
+                    learningCards: stats.learningCards,
                   ),
                   const SizedBox(height: 12),
                   // Card status chips
@@ -351,20 +353,27 @@ class _StatChip extends StatelessWidget {
   }
 }
 
-/// Shows mastery progress with a visual bar (UC31).
+/// Shows mastery progress with a visual bar (UC31) and completion estimate (UC57).
 class _MasteryProgress extends StatelessWidget {
   final double masteryPercent;
   final int totalCards;
+  final int newCards;
+  final int learningCards;
+  final int? avgCardsPerDay;
 
   const _MasteryProgress({
     required this.masteryPercent,
     required this.totalCards,
+    this.newCards = 0,
+    this.learningCards = 0,
+    this.avgCardsPerDay,
   });
 
   @override
   Widget build(BuildContext context) {
     final percent = masteryPercent.clamp(0.0, 100.0);
     final color = _getProgressColor(percent);
+    final estimatedDays = _calculateEstimatedDays();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -406,14 +415,68 @@ class _MasteryProgress extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 4),
-        Text(
-          _getMasteryLabel(percent),
-          style: context.textTheme.labelSmall?.copyWith(
-            color: context.colorScheme.onSurfaceVariant,
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Text(
+                _getMasteryLabel(percent),
+                style: context.textTheme.labelSmall?.copyWith(
+                  color: context.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+            // UC57: Completion estimate
+            if (estimatedDays != null && percent < 100)
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.schedule,
+                    size: 12,
+                    color: context.colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    _formatEstimate(estimatedDays),
+                    style: context.textTheme.labelSmall?.copyWith(
+                      color: context.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+          ],
         ),
       ],
     );
+  }
+
+  /// UC57: Calculate estimated days to complete deck mastery.
+  int? _calculateEstimatedDays() {
+    if (masteryPercent >= 100) return null;
+
+    // Cards remaining to master (new + learning)
+    final remainingCards = newCards + learningCards;
+    if (remainingCards == 0) return null;
+
+    // Use provided average or estimate ~10 cards/day as default
+    final cardsPerDay = avgCardsPerDay ?? 10;
+    if (cardsPerDay <= 0) return null;
+
+    // Each card needs ~3-5 reviews on average to be mastered
+    final totalReviewsNeeded = remainingCards * 4;
+    return (totalReviewsNeeded / cardsPerDay).ceil();
+  }
+
+  String _formatEstimate(int days) {
+    if (days <= 1) return '~1 dia';
+    if (days < 7) return '~$days dias';
+    if (days < 30) {
+      final weeks = (days / 7).round();
+      return '~$weeks sem${weeks == 1 ? 'ana' : 'anas'}';
+    }
+    final months = (days / 30).round();
+    return '~$months ${months == 1 ? 'mes' : 'meses'}';
   }
 
   Color _getProgressColor(double percent) {

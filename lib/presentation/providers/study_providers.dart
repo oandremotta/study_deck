@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -194,26 +195,40 @@ class StudyNotifier extends _$StudyNotifier {
   /// Completes the current session.
   Future<StudySession?> completeSession() async {
     var currentSession = state.valueOrNull;
+    debugPrint('completeSession: state.valueOrNull = ${currentSession?.id}');
 
     // If state is null, try to fetch active session from DB
     if (currentSession == null) {
+      debugPrint('completeSession: state is null, fetching from DB');
       final repository = ref.read(studyRepositoryProvider);
       final activeResult = await repository.getActiveSession();
       currentSession = activeResult.fold(
-        (failure) => null,
-        (session) => session,
+        (failure) {
+          debugPrint('completeSession: getActiveSession failed: ${failure.message}');
+          return null;
+        },
+        (session) {
+          debugPrint('completeSession: getActiveSession returned: ${session?.id}');
+          return session;
+        },
       );
       if (currentSession == null) {
+        debugPrint('completeSession: no active session found');
         return null;
       }
     }
 
+    debugPrint('completeSession: completing session ${currentSession.id}');
     final repository = ref.read(studyRepositoryProvider);
     final result = await repository.completeSession(currentSession.id);
 
     return result.fold(
-      (failure) => null,
+      (failure) {
+        debugPrint('completeSession: FAILED - ${failure.message}');
+        return null;
+      },
       (session) {
+        debugPrint('completeSession: SUCCESS - session ${session.id} completed');
         state = AsyncData(session);
         ref.invalidate(activeSessionProvider);
         ref.invalidate(userStatsProvider);

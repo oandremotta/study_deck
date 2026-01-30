@@ -144,6 +144,27 @@ class StudyDao extends DatabaseAccessor<AppDatabase> with _$StudyDaoMixin {
     return query.get();
   }
 
+  /// Gets the next scheduled review time for a user.
+  /// Returns null if there are no future reviews scheduled.
+  Future<DateTime?> getNextReviewTime({
+    required String userId,
+    String? deckId,
+  }) async {
+    final now = DateTime.now();
+    var query = select(cardSrsTable)
+      ..where((t) => t.userId.equals(userId))
+      ..where((t) => t.nextReviewAt.isBiggerThanValue(now))
+      ..orderBy([(t) => OrderingTerm.asc(t.nextReviewAt)])
+      ..limit(1);
+
+    if (deckId != null) {
+      query = query..where((t) => t.deckId.equals(deckId));
+    }
+
+    final result = await query.getSingleOrNull();
+    return result?.nextReviewAt;
+  }
+
   /// Gets cards with recent errors for a user.
   Future<List<String>> getRecentErrorCardIds({
     required String userId,

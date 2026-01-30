@@ -80,6 +80,12 @@ abstract class StudyRepository {
   /// Resets all SRS progress for a deck (UC28).
   Future<Either<Failure, void>> resetDeckProgress(String deckId);
 
+  // ==================== Scheduling ====================
+
+  /// Gets the next scheduled review time.
+  /// Returns null if there are no future reviews scheduled.
+  Future<Either<Failure, DateTime?>> getNextReviewTime({String? deckId});
+
   // ==================== User Stats ====================
 
   /// Gets the current user's stats.

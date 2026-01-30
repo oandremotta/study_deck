@@ -614,6 +614,26 @@ class StudyRepositoryImpl implements StudyRepository {
     }
   }
 
+  // ==================== Scheduling ====================
+
+  @override
+  Future<Either<Failure, DateTime?>> getNextReviewTime({String? deckId}) async {
+    try {
+      final userId = await _getCurrentUserId();
+      if (userId == null) {
+        return const Right(null);
+      }
+
+      final nextReview = await _studyDao.getNextReviewTime(
+        userId: userId,
+        deckId: deckId,
+      );
+      return Right(nextReview);
+    } catch (e) {
+      return Left(LocalStorageFailure(message: e.toString()));
+    }
+  }
+
   // ==================== User Stats ====================
 
   @override
