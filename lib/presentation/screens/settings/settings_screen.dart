@@ -132,16 +132,16 @@ class SettingsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Configuracoes'),
+        title: const Text('Configurações'),
       ),
       body: settings.isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
               children: [
                 // Notifications Section
-                _SectionHeader(title: 'Notificacoes'),
+                _SectionHeader(title: 'Notificações'),
                 SwitchListTile(
-                  title: const Text('Ativar notificacoes'),
+                  title: const Text('Ativar notificações'),
                   subtitle: const Text('Receba lembretes para estudar'),
                   value: settings.notificationsEnabled,
                   onChanged: (value) {
@@ -150,15 +150,15 @@ class SettingsScreen extends ConsumerWidget {
                 ),
                 if (settings.notificationsEnabled) ...[
                   ListTile(
-                    title: const Text('Horario do lembrete'),
+                    title: const Text('Horário do lembrete'),
                     subtitle: Text(_formatTime(settings.reminderTime)),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => _showTimePicker(context, ref, settings.reminderTime),
                   ),
                   const Divider(),
                   SwitchListTile(
-                    title: const Text('Lembrete de sequencia'),
-                    subtitle: const Text('Notificar quando a sequencia estiver em risco'),
+                    title: const Text('Lembrete de sequência'),
+                    subtitle: const Text('Notificar quando a sequência estiver em risco'),
                     value: settings.streakReminderEnabled,
                     onChanged: (value) {
                       ref.read(notificationSettingsProvider.notifier).setStreakReminder(value);
@@ -166,7 +166,7 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                   SwitchListTile(
                     title: const Text('Lembrete de meta'),
-                    subtitle: const Text('Notificar quando a meta diaria nao foi atingida'),
+                    subtitle: const Text('Notificar quando a meta diária não foi atingida'),
                     value: settings.goalReminderEnabled,
                     onChanged: (value) {
                       ref.read(notificationSettingsProvider.notifier).setGoalReminder(value);
@@ -178,13 +178,13 @@ class SettingsScreen extends ConsumerWidget {
                 // Info Section
                 _SectionHeader(title: 'Sobre'),
                 ListTile(
-                  title: const Text('Versao'),
+                  title: const Text('Versão'),
                   subtitle: const Text('1.0.0'),
                   leading: const Icon(Icons.info_outline),
                 ),
                 ListTile(
                   title: const Text('Study Deck'),
-                  subtitle: const Text('Aplicativo de flashcards com repeticao espacada'),
+                  subtitle: const Text('Aplicativo de flashcards com repetição espaçada'),
                   leading: const Icon(Icons.school),
                 ),
               ],
@@ -206,13 +206,13 @@ class SettingsScreen extends ConsumerWidget {
     final picked = await showTimePicker(
       context: context,
       initialTime: currentTime,
-      helpText: 'Escolha o horario do lembrete',
+      helpText: 'Escolha o horário do lembrete',
     );
 
     if (picked != null) {
       ref.read(notificationSettingsProvider.notifier).setReminderTime(picked);
       if (context.mounted) {
-        context.showSnackBar('Horario atualizado para ${_formatTimeOfDay(picked)}');
+        context.showSnackBar('Horário atualizado para ${_formatTimeOfDay(picked)}');
       }
     }
   }

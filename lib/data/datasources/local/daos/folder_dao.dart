@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:drift/drift.dart';
 
 import '../database.dart';
@@ -83,15 +85,53 @@ class FolderDao extends DatabaseAccessor<AppDatabase> with _$FolderDaoMixin {
   }
 
   /// Watches all folders with deck counts.
+  ///
+  /// This stream emits when either folders or decks change,
+  /// ensuring deck counts are always up-to-date.
   Stream<List<FolderWithDeckCount>> watchFoldersWithDeckCount(String userId) {
-    return watchFolders(userId).asyncMap((folders) async {
+    // Create a controller to manage the combined stream
+    late StreamController<List<FolderWithDeckCount>> controller;
+    StreamSubscription<List<FolderTableData>>? folderSub;
+    StreamSubscription<List<DeckTableData>>? deckSub;
+
+    List<FolderTableData> currentFolders = [];
+
+    Future<void> emitFoldersWithCounts() async {
+      if (controller.isClosed) return;
+
       final result = <FolderWithDeckCount>[];
-      for (final folder in folders) {
+      for (final folder in currentFolders) {
         final deckCount = await getDeckCount(folder.id);
         result.add(FolderWithDeckCount(folder: folder, deckCount: deckCount));
       }
-      return result;
-    });
+      if (!controller.isClosed) {
+        controller.add(result);
+      }
+    }
+
+    controller = StreamController<List<FolderWithDeckCount>>(
+      onListen: () {
+        // Watch folders
+        folderSub = watchFolders(userId).listen((folders) {
+          currentFolders = folders;
+          emitFoldersWithCounts();
+        });
+
+        // Watch decks to detect folderId changes
+        deckSub = select(deckTable).watch().listen((_) {
+          // When any deck changes, recalculate counts
+          if (currentFolders.isNotEmpty) {
+            emitFoldersWithCounts();
+          }
+        });
+      },
+      onCancel: () {
+        folderSub?.cancel();
+        deckSub?.cancel();
+      },
+    );
+
+    return controller.stream;
   }
 }
 

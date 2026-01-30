@@ -212,7 +212,51 @@ class DeckRepositoryImpl implements DeckRepository {
     required String id,
     String? folderId,
   }) async {
-    return updateDeck(id: id, folderId: folderId);
+    try {
+      final existingDeck = await _database.deckDao.getDeckById(id);
+      if (existingDeck == null) {
+        return Left(const LocalStorageFailure(
+          message: 'Deck not found',
+          code: 'not-found',
+        ));
+      }
+
+      final now = DateTime.now();
+      // Explicitly set folderId to the provided value (including null)
+      final updatedCompanion = DeckTableCompanion(
+        id: Value(id),
+        name: Value(existingDeck.name),
+        description: Value(existingDeck.description),
+        userId: Value(existingDeck.userId),
+        folderId: Value(folderId), // Always use the provided value
+        createdAt: Value(existingDeck.createdAt),
+        updatedAt: Value(now),
+        isSynced: const Value(false),
+        remoteId: Value(existingDeck.remoteId),
+      );
+
+      await _database.deckDao.updateDeck(updatedCompanion);
+
+      final cardCount = await _database.cardDao.getCardCount(id);
+      final updatedDeck = Deck(
+        id: id,
+        name: existingDeck.name,
+        description: existingDeck.description,
+        userId: existingDeck.userId,
+        folderId: folderId, // Use the new folderId
+        createdAt: existingDeck.createdAt,
+        updatedAt: now,
+        cardCount: cardCount,
+        isSynced: false,
+        remoteId: existingDeck.remoteId,
+      );
+
+      return Right(updatedDeck);
+    } on LocalStorageException catch (e) {
+      return Left(LocalStorageFailure(message: e.message, code: e.code));
+    } catch (e) {
+      return Left(LocalStorageFailure(message: 'Failed to move deck: $e'));
+    }
   }
 
   @override

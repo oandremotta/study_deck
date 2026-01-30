@@ -1045,7 +1045,7 @@ class _UrgencyNudge extends StatelessWidget {
   }
 }
 
-/// Quick actions section with shortcuts.
+/// UC106: "Minha biblioteca" section with action-oriented shortcuts.
 class _QuickActionsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -1053,7 +1053,7 @@ class _QuickActionsSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Continue estudando',
+          'Minha biblioteca',
           style: context.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w600,
           ),
@@ -1063,17 +1063,17 @@ class _QuickActionsSection extends StatelessWidget {
           children: [
             Expanded(
               child: _ActionCard(
-                icon: Icons.folder_outlined,
-                label: 'Pastas',
-                onTap: () => context.push(AppRoutes.folders),
+                icon: Icons.style_outlined,
+                label: 'Meus decks',
+                onTap: () => context.push(AppRoutes.decks),
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: _ActionCard(
-                icon: Icons.style_outlined,
-                label: 'Decks',
-                onTap: () => context.push(AppRoutes.decks),
+                icon: Icons.folder_outlined,
+                label: 'Assuntos',
+                onTap: () => context.push(AppRoutes.folders),
               ),
             ),
           ],
@@ -1084,7 +1084,7 @@ class _QuickActionsSection extends StatelessWidget {
             Expanded(
               child: _ActionCard(
                 icon: Icons.bar_chart_rounded,
-                label: 'Estatisticas',
+                label: 'Meu progresso',
                 onTap: () => context.push(AppRoutes.stats),
               ),
             ),
@@ -1092,7 +1092,7 @@ class _QuickActionsSection extends StatelessWidget {
             Expanded(
               child: _ActionCard(
                 icon: Icons.label_outline,
-                label: 'Tags',
+                label: 'Organizar tags',
                 onTap: () => context.push(AppRoutes.tags),
               ),
             ),

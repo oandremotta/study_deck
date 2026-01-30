@@ -5,12 +5,13 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/extensions/context_extensions.dart';
 import '../../../domain/entities/folder.dart';
+import '../../providers/deck_providers.dart';
 import '../../providers/folder_providers.dart';
 import '../../router/app_router.dart';
 
-/// Screen displaying all folders.
+/// Screen displaying all folders (Assuntos).
 ///
-/// Implements UC04, UC05, UC06 (Folder CRUD).
+/// Implements UC04, UC05, UC06 (Folder CRUD), UC108 (Navigate to folders).
 class FoldersScreen extends ConsumerWidget {
   const FoldersScreen({super.key});
 
@@ -20,7 +21,7 @@ class FoldersScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Pastas'),
+        title: const Text('Assuntos'),
       ),
       body: foldersAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -44,48 +45,107 @@ class FoldersScreen extends ConsumerWidget {
           ),
         ),
         data: (folders) {
-          if (folders.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.folder_open_outlined,
-                    size: 64,
-                    color: context.colorScheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Nenhuma pasta ainda',
-                    style: context.textTheme.titleMedium?.copyWith(
-                      color: context.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Crie pastas para organizar seus decks',
-                    style: context.textTheme.bodyMedium?.copyWith(
-                      color: context.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: folders.length,
-            itemBuilder: (context, index) {
-              final folder = folders[index];
-              return _FolderTile(folder: folder);
-            },
-          );
+          return _FoldersListView(folders: folders);
         },
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.push(AppRoutes.folderForm),
         child: const Icon(Icons.add),
+      ),
+    );
+  }
+}
+
+/// UC112: List view that includes folders and "Sem assunto" section.
+class _FoldersListView extends ConsumerWidget {
+  final List<Folder> folders;
+
+  const _FoldersListView({required this.folders});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final unorganizedDecksAsync = ref.watch(watchDecksByFolderProvider(null));
+
+    return unorganizedDecksAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (_, __) => _buildList(context, 0),
+      data: (unorganizedDecks) => _buildList(context, unorganizedDecks.length),
+    );
+  }
+
+  Widget _buildList(BuildContext context, int unorganizedCount) {
+    // If no folders and no unorganized decks, show empty state
+    if (folders.isEmpty && unorganizedCount == 0) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.folder_open_outlined,
+              size: 64,
+              color: context.colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Nenhum assunto ainda',
+              style: context.textTheme.titleMedium?.copyWith(
+                color: context.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Crie assuntos para organizar seus decks',
+              style: context.textTheme.bodyMedium?.copyWith(
+                color: context.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Build list with "Sem assunto" at the top if there are unorganized decks
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: folders.length + (unorganizedCount > 0 ? 1 : 0),
+      itemBuilder: (context, index) {
+        // First item: "Sem assunto" if there are unorganized decks
+        if (unorganizedCount > 0 && index == 0) {
+          return _UnorganizedDecksTile(deckCount: unorganizedCount);
+        }
+
+        // Adjust index for folders if "Sem assunto" is shown
+        final folderIndex = unorganizedCount > 0 ? index - 1 : index;
+        final folder = folders[folderIndex];
+        return _FolderTile(folder: folder);
+      },
+    );
+  }
+}
+
+/// UC112: Tile for decks without a folder ("Sem assunto").
+class _UnorganizedDecksTile extends StatelessWidget {
+  final int deckCount;
+
+  const _UnorganizedDecksTile({required this.deckCount});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        leading: Icon(
+          Icons.folder_off_outlined,
+          color: context.colorScheme.onSurfaceVariant,
+        ),
+        title: const Text('Sem assunto'),
+        subtitle: Text(
+          '$deckCount ${deckCount == 1 ? 'deck' : 'decks'}',
+        ),
+        onTap: () {
+          // Navigate to decks without folder
+          context.push('${AppRoutes.decks}?folderName=${Uri.encodeComponent('Sem assunto')}');
+        },
       ),
     );
   }
@@ -135,8 +195,10 @@ class _FolderTile extends ConsumerWidget {
           ],
         ),
         onTap: () {
-          // TODO: Navigate to folder decks
-          context.showSnackBar('Abrir pasta - em breve!');
+          // UC107/UC108: Navigate to folder's decks
+          context.push(
+            '${AppRoutes.decks}?folderId=${folder.id}&folderName=${Uri.encodeComponent(folder.name)}',
+          );
         },
       ),
     );
@@ -155,13 +217,13 @@ class _FolderTile extends ConsumerWidget {
 
   void _showDeleteDialog(BuildContext context, WidgetRef ref) {
     if (folder.hasDecks) {
-      // UC06: Folder has decks - ask what to do
+      // UC113: Folder has decks - ask what to do
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Excluir pasta'),
+          title: const Text('Excluir assunto'),
           content: Text(
-            'A pasta "${folder.name}" contem ${folder.deckCount} deck(s). '
+            'O assunto "${folder.name}" contem ${folder.deckCount} deck(s). '
             'O que deseja fazer com eles?',
           ),
           actions: [
@@ -174,7 +236,7 @@ class _FolderTile extends ConsumerWidget {
                 Navigator.pop(context);
                 _deleteFolder(context, ref, DeleteFolderAction.moveDecksToRoot);
               },
-              child: const Text('Mover para "Sem pasta"'),
+              child: const Text('Mover para "Sem assunto"'),
             ),
             TextButton(
               onPressed: () {
@@ -194,8 +256,8 @@ class _FolderTile extends ConsumerWidget {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Excluir pasta'),
-          content: Text('Deseja excluir a pasta "${folder.name}"?'),
+          title: const Text('Excluir assunto'),
+          content: Text('Deseja excluir o assunto "${folder.name}"?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),

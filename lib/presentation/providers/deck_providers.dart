@@ -104,6 +104,19 @@ Future<void> deleteDeckDirect(
   );
 }
 
+/// UC110: Moves a deck to a folder directly via repository.
+Future<Deck> moveDeckToFolderDirect(
+  DeckRepository repository,
+  String deckId,
+  String? folderId,
+) async {
+  final result = await repository.moveDeck(id: deckId, folderId: folderId);
+  return result.fold(
+    (failure) => throw Exception(failure.message),
+    (deck) => deck,
+  );
+}
+
 /// Notifier for deck operations.
 @riverpod
 class DeckNotifier extends _$DeckNotifier {

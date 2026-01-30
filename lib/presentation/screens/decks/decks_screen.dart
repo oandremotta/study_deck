@@ -4,8 +4,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/extensions/context_extensions.dart';
 import '../../../domain/entities/deck.dart';
+import '../../../domain/entities/folder.dart';
 import '../../../domain/repositories/deck_repository.dart';
 import '../../providers/deck_providers.dart';
+import '../../providers/folder_providers.dart';
 import '../../router/app_router.dart';
 
 /// Screen displaying decks in a folder (or root).
@@ -154,6 +156,17 @@ class _DeckTile extends ConsumerWidget {
                 ],
               ),
             ),
+            // UC110: Move deck to folder
+            const PopupMenuItem(
+              value: 'move',
+              child: Row(
+                children: [
+                  Icon(Icons.drive_file_move_outlined),
+                  SizedBox(width: 8),
+                  Text('Mover para assunto'),
+                ],
+              ),
+            ),
             const PopupMenuItem(
               value: 'delete',
               child: Row(
@@ -176,10 +189,33 @@ class _DeckTile extends ConsumerWidget {
       case 'edit':
         context.push('${AppRoutes.deckForm}?id=${deck.id}');
         break;
+      case 'move':
+        _showMoveToFolderDialog(context, ref);
+        break;
       case 'delete':
         _showDeleteDialog(context, ref);
         break;
     }
+  }
+
+  /// UC110: Show dialog to move deck to another folder.
+  void _showMoveToFolderDialog(BuildContext context, WidgetRef ref) {
+    final foldersAsync = ref.read(watchFoldersProvider);
+
+    foldersAsync.when(
+      loading: () => context.showSnackBar('Carregando assuntos...'),
+      error: (_, __) => context.showErrorSnackBar('Erro ao carregar assuntos'),
+      data: (folders) {
+        showModalBottomSheet(
+          context: context,
+          builder: (context) => _MoveToFolderSheet(
+            deck: deck,
+            folders: folders,
+            currentFolderId: deck.folderId,
+          ),
+        );
+      },
+    );
   }
 
   void _showDeleteDialog(BuildContext context, WidgetRef ref) {
@@ -254,6 +290,131 @@ class _DeckTile extends ConsumerWidget {
 
       if (context.mounted) {
         context.showSnackBar('Deck excluido');
+      }
+    } catch (e) {
+      if (context.mounted) {
+        context.showErrorSnackBar(e.toString().replaceFirst('Exception: ', ''));
+      }
+    }
+  }
+}
+
+/// UC110: Bottom sheet for moving a deck to a folder.
+class _MoveToFolderSheet extends ConsumerWidget {
+  final Deck deck;
+  final List<Folder> folders;
+  final String? currentFolderId;
+
+  const _MoveToFolderSheet({
+    required this.deck,
+    required this.folders,
+    this.currentFolderId,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Mover "${deck.name}" para:',
+              style: context.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // "Sem assunto" option (UC112)
+            ListTile(
+              leading: Icon(
+                Icons.folder_off_outlined,
+                color: currentFolderId == null
+                    ? context.colorScheme.primary
+                    : context.colorScheme.onSurfaceVariant,
+              ),
+              title: const Text('Sem assunto'),
+              trailing: currentFolderId == null
+                  ? Icon(Icons.check, color: context.colorScheme.primary)
+                  : null,
+              onTap: currentFolderId == null
+                  ? null
+                  : () => _moveDeck(context, ref, null),
+            ),
+
+            const Divider(),
+
+            // Folder list
+            if (folders.isEmpty)
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  'Nenhum assunto criado ainda',
+                  style: context.textTheme.bodyMedium?.copyWith(
+                    color: context.colorScheme.onSurfaceVariant,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              )
+            else
+              ...folders.map((folder) => ListTile(
+                    leading: Icon(
+                      Icons.folder_rounded,
+                      color: folder.id == currentFolderId
+                          ? context.colorScheme.primary
+                          : context.colorScheme.onSurfaceVariant,
+                    ),
+                    title: Text(folder.name),
+                    subtitle: Text('${folder.deckCount} decks'),
+                    trailing: folder.id == currentFolderId
+                        ? Icon(Icons.check, color: context.colorScheme.primary)
+                        : null,
+                    onTap: folder.id == currentFolderId
+                        ? null
+                        : () => _moveDeck(context, ref, folder.id),
+                  )),
+
+            const SizedBox(height: 8),
+
+            // Create new folder option
+            OutlinedButton.icon(
+              onPressed: () {
+                Navigator.pop(context);
+                context.push(AppRoutes.folderForm);
+              },
+              icon: const Icon(Icons.add),
+              label: const Text('Criar novo assunto'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _moveDeck(
+    BuildContext context,
+    WidgetRef ref,
+    String? newFolderId,
+  ) async {
+    Navigator.pop(context);
+
+    try {
+      final repository = ref.read(deckRepositoryProvider);
+      await moveDeckToFolderDirect(repository, deck.id, newFolderId);
+
+      // Invalidate providers to refresh data
+      ref.invalidate(watchFoldersProvider);
+      ref.invalidate(watchDecksByFolderProvider(currentFolderId));
+      ref.invalidate(watchDecksByFolderProvider(newFolderId));
+
+      if (context.mounted) {
+        final folderName = newFolderId == null
+            ? 'Sem assunto'
+            : folders.firstWhere((f) => f.id == newFolderId).name;
+        context.showSnackBar('Deck movido para "$folderName"');
       }
     } catch (e) {
       if (context.mounted) {
