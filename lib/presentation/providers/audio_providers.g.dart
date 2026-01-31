@@ -6,7 +6,7 @@ part of 'audio_providers.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$audioServiceHash() => r'010adb07618eeb58ad083f9a779873d496d836ee';
+String _$audioServiceHash() => r'b9a9e5c5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5';
 
 /// Provider for the audio playback/recording service.
 ///
@@ -24,25 +24,7 @@ final audioServiceProvider = Provider<AudioService>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef AudioServiceRef = ProviderRef<AudioService>;
-String _$ttsServiceHash() => r'0849baaee56a29fc469ff2a1a53368b38d4d6bd5';
-
-/// Provider for TTS service based on configuration.
-///
-/// Copied from [ttsService].
-@ProviderFor(ttsService)
-final ttsServiceProvider = AutoDisposeProvider<TtsService?>.internal(
-  ttsService,
-  name: r'ttsServiceProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$ttsServiceHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef TtsServiceRef = AutoDisposeProviderRef<TtsService?>;
-String _$audioSettingsHash() => r'abd65ff8a5601d27a9c3c37725925416f4ebdd11';
+String _$audioSettingsHash() => r'a8a8e5c5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5';
 
 /// Provider for loading audio settings.
 ///

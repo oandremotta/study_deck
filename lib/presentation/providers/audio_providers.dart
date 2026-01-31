@@ -27,22 +27,15 @@ AudioService audioService(Ref ref) {
 }
 
 /// Provider for TTS service based on configuration.
-@riverpod
-TtsService? ttsService(Ref ref) {
-  final configAsync = ref.watch(aiConfigNotifierProvider);
+final ttsServiceProvider = Provider<TtsService?>((ref) {
+  final config = ref.watch(aiConfigProvider);
 
-  return configAsync.when(
-    data: (config) {
-      // Use OpenAI API key for TTS if available
-      if (config.openaiApiKey != null && config.openaiApiKey!.isNotEmpty) {
-        return OpenAiTtsService(apiKey: config.openaiApiKey!);
-      }
-      return null;
-    },
-    loading: () => null,
-    error: (_, __) => null,
-  );
-}
+  // Use OpenAI API key for TTS if available
+  if (config.openaiApiKey != null && config.openaiApiKey!.isNotEmpty) {
+    return OpenAiTtsService(apiKey: config.openaiApiKey!);
+  }
+  return null;
+});
 
 // ============ Audio Settings ============
 

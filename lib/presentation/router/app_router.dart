@@ -44,6 +44,15 @@ import '../screens/privacy/security_log_screen.dart';
 import '../screens/backup/backup_screen.dart';
 import '../screens/backup/sync_settings_screen.dart';
 import '../screens/backup/conflict_resolution_screen.dart';
+import '../screens/educator/classroom_list_screen.dart';
+import '../screens/educator/classroom_detail_screen.dart';
+import '../screens/educator/student_progress_screen.dart';
+import '../screens/educator/educator_dashboard_screen.dart';
+import '../screens/educator/join_classroom_screen.dart';
+import '../screens/community/community_browse_screen.dart';
+import '../screens/community/community_deck_detail_screen.dart';
+import '../screens/community/publish_deck_screen.dart';
+import '../screens/admin/admin_dashboard_screen.dart';
 import '../../domain/entities/study_session.dart';
 
 part 'app_router.g.dart';
@@ -100,6 +109,22 @@ abstract class AppRoutes {
   static const backupManagement = '/backup';
   static const syncSettings = '/sync/settings';
   static const syncConflicts = '/sync/conflicts';
+
+  // Educator/B2B routes (UC161-171)
+  static const classroomList = '/educator/classrooms';
+  static const classroomDetail = '/educator/classroom';
+  static const classroomStudents = '/educator/classroom/students';
+  static const studentProgress = '/educator/student';
+  static const joinClassroom = '/student/join';
+  static const educatorDashboard = '/educator/dashboard';
+
+  // Community routes (UC172-182)
+  static const communityBrowse = '/community';
+  static const communityDeckDetail = '/community/deck';
+  static const publishDeck = '/community/publish';
+
+  // Admin/Analytics routes (UC151-160)
+  static const adminDashboard = '/admin/dashboard';
 }
 
 /// Alias for backward compatibility with screens using AppRouter.
@@ -381,6 +406,71 @@ GoRouter appRouter(Ref ref) {
         path: AppRoutes.syncConflicts,
         name: 'syncConflicts',
         builder: (context, state) => const ConflictResolutionScreen(),
+      ),
+      // Educator/B2B routes
+      GoRoute(
+        path: AppRoutes.classroomList,
+        name: 'classroomList',
+        builder: (context, state) => const ClassroomListScreen(),
+      ),
+      GoRoute(
+        path: '${AppRoutes.classroomDetail}/:id',
+        name: 'classroomDetail',
+        builder: (context, state) {
+          final classroomId = state.pathParameters['id']!;
+          return ClassroomDetailScreen(classroomId: classroomId);
+        },
+      ),
+      GoRoute(
+        path: '${AppRoutes.classroomStudents}/:id',
+        name: 'classroomStudents',
+        builder: (context, state) {
+          final classroomId = state.pathParameters['id']!;
+          return ClassroomDetailScreen(classroomId: classroomId);
+        },
+      ),
+      GoRoute(
+        path: '${AppRoutes.studentProgress}/:id',
+        name: 'studentProgress',
+        builder: (context, state) {
+          final studentId = state.pathParameters['id']!;
+          return StudentProgressScreen(studentId: studentId);
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.joinClassroom,
+        name: 'joinClassroom',
+        builder: (context, state) => const JoinClassroomScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.educatorDashboard,
+        name: 'educatorDashboard',
+        builder: (context, state) => const EducatorDashboardScreen(),
+      ),
+      // Community routes
+      GoRoute(
+        path: AppRoutes.communityBrowse,
+        name: 'communityBrowse',
+        builder: (context, state) => const CommunityBrowseScreen(),
+      ),
+      GoRoute(
+        path: '${AppRoutes.communityDeckDetail}/:id',
+        name: 'communityDeckDetail',
+        builder: (context, state) {
+          final deckId = state.pathParameters['id']!;
+          return CommunityDeckDetailScreen(deckId: deckId);
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.publishDeck,
+        name: 'publishDeck',
+        builder: (context, state) => const PublishDeckScreen(),
+      ),
+      // Admin routes
+      GoRoute(
+        path: AppRoutes.adminDashboard,
+        name: 'adminDashboard',
+        builder: (context, state) => const AdminDashboardScreen(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

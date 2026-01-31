@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../data/services/analytics_service.dart';
 import '../../data/services/card_quality_service.dart';
 import '../../data/services/pedagogical_analytics_service.dart';
 import '../../domain/entities/card.dart';
@@ -198,4 +199,108 @@ List<ImprovementSuggestion> generateImprovementSuggestionsDirect(
   Card card,
 ) {
   return service.generateImprovementSuggestions(card);
+}
+
+// ============ UC151-160: Business Analytics ============
+
+/// Provider for business analytics service.
+final businessAnalyticsServiceProvider = Provider<AnalyticsService>((ref) {
+  return AnalyticsService();
+});
+
+/// Provider for dashboard metrics.
+final dashboardMetricsProvider = FutureProvider<DashboardMetrics>((ref) async {
+  final service = ref.watch(businessAnalyticsServiceProvider);
+  return service.getDashboardMetrics();
+});
+
+/// Provider for business retention metrics (D1, D7, D30, D90).
+final businessRetentionProvider = FutureProvider<RetentionMetrics>((ref) async {
+  final service = ref.watch(businessAnalyticsServiceProvider);
+  return service.calculateRetention();
+});
+
+/// Provider for churn status.
+final churnStatusProvider = FutureProvider<ChurnStatus>((ref) async {
+  final service = ref.watch(businessAnalyticsServiceProvider);
+  return service.checkChurnStatus();
+});
+
+/// Provider for LTV metrics.
+final ltvMetricsProvider = FutureProvider<LtvMetrics>((ref) async {
+  final service = ref.watch(businessAnalyticsServiceProvider);
+  return service.calculateLtv();
+});
+
+/// Provider for funnel state.
+final funnelStateProvider = FutureProvider<FunnelState>((ref) async {
+  final service = ref.watch(businessAnalyticsServiceProvider);
+  return service.getFunnelState();
+});
+
+/// Provider for AI cost metrics.
+final aiCostMetricsProvider = FutureProvider<AiCostMetrics>((ref) async {
+  final service = ref.watch(businessAnalyticsServiceProvider);
+  return service.getAiCostMetrics();
+});
+
+/// Provider for ad ROI metrics.
+final adRoiMetricsProvider = FutureProvider<AdRoiMetrics>((ref) async {
+  final service = ref.watch(businessAnalyticsServiceProvider);
+  return service.getAdRoiMetrics();
+});
+
+// ============ Business Analytics Direct Functions ============
+
+/// UC151: Track analytics event.
+Future<void> trackEventDirect(
+  AnalyticsService service,
+  String eventType, {
+  Map<String, dynamic>? properties,
+}) async {
+  await service.trackEvent(eventType, properties: properties);
+}
+
+/// Record first use.
+Future<void> recordFirstUseDirect(AnalyticsService service) async {
+  await service.recordFirstUse();
+}
+
+/// Record daily active.
+Future<void> recordDailyActiveDirect(AnalyticsService service) async {
+  await service.recordDailyActive();
+}
+
+/// UC154: Record revenue.
+Future<void> recordRevenueDirect(
+  AnalyticsService service, {
+  required double amount,
+  required RevenueType type,
+  String? productId,
+}) async {
+  await service.recordRevenue(
+    amount: amount,
+    type: type,
+    productId: productId,
+  );
+}
+
+/// UC158: Record ad watch.
+Future<void> recordAdWatchDirect(
+  AnalyticsService service, {
+  required int creditsEarned,
+}) async {
+  await service.recordAdWatch(creditsEarned: creditsEarned);
+}
+
+/// UC159: Record AI cost.
+Future<void> recordAiCostDirect(
+  AnalyticsService service, {
+  required int creditsUsed,
+  required int cardsGenerated,
+}) async {
+  await service.recordAiCost(
+    creditsUsed: creditsUsed,
+    cardsGenerated: cardsGenerated,
+  );
 }

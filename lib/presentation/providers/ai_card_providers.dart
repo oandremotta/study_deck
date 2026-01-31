@@ -41,35 +41,16 @@ PdfService pdfService(Ref ref) {
   return PdfService();
 }
 
-/// Provider for AI generation configuration.
+/// Provider for AI generation configuration (synchronous).
 ///
 /// Uses the app-provided Gemini API key by default.
-@riverpod
-class AiConfigNotifier extends _$AiConfigNotifier {
-  @override
-  Future<AiConfig> build() async {
-    // Always use Gemini with the app-provided API key
-    return const AiConfig(
-      provider: AiProvider.gemini,
-      geminiApiKey: _defaultGeminiApiKey,
-    );
-  }
-
-  /// Sets the AI provider (kept for compatibility but defaults to Gemini).
-  Future<void> setProvider(AiProvider provider) async {
-    // No-op: always use Gemini
-  }
-
-  /// Sets the Gemini API key (kept for compatibility but uses default).
-  Future<void> setGeminiApiKey(String? key) async {
-    // No-op: always use app-provided key
-  }
-
-  /// Sets the OpenAI API key (kept for compatibility).
-  Future<void> setOpenaiApiKey(String? key) async {
-    // No-op: not used
-  }
-}
+/// NOTE: This is synchronous since the config is a constant.
+final aiConfigProvider = Provider<AiConfig>((ref) {
+  return const AiConfig(
+    provider: AiProvider.gemini,
+    geminiApiKey: _defaultGeminiApiKey,
+  );
+});
 
 /// Configuration for AI generation.
 class AiConfig {
@@ -100,25 +81,19 @@ class AiConfig {
 /// Provider for the AI generation service.
 ///
 /// Uses the configured provider (Gemini or OpenAI).
-@riverpod
-AiGenerationService? aiGenerationService(Ref ref) {
-  final configAsync = ref.watch(aiConfigNotifierProvider);
+/// NOTE: keepAlive to prevent recreation on every access.
+final aiGenerationServiceProvider = Provider<AiGenerationService?>((ref) {
+  final config = ref.watch(aiConfigProvider);
 
-  return configAsync.when(
-    data: (config) {
-      if (!config.hasValidApiKey) return null;
+  if (!config.hasValidApiKey) return null;
 
-      switch (config.provider) {
-        case AiProvider.gemini:
-          return GeminiGenerationService(apiKey: config.geminiApiKey!);
-        case AiProvider.openai:
-          return OpenAiGenerationService(apiKey: config.openaiApiKey!);
-      }
-    },
-    loading: () => null,
-    error: (_, __) => null,
-  );
-}
+  switch (config.provider) {
+    case AiProvider.gemini:
+      return GeminiGenerationService(apiKey: config.geminiApiKey!);
+    case AiProvider.openai:
+      return OpenAiGenerationService(apiKey: config.openaiApiKey!);
+  }
+});
 
 // ============ Stream Providers ============
 

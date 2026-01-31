@@ -41,6 +41,47 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 
+  <!-- Google AdSense for Web Ads -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2826419607983408"
+       crossorigin="anonymous"></script>
+
+  <!-- Ad Placement API for Rewarded Ads -->
+  <script>
+    window.adBreak = window.adBreak || function(o) { (window.adBreakQueue = window.adBreakQueue || []).push(o); };
+    window.adConfig = window.adConfig || function(o) { (window.adConfigQueue = window.adConfigQueue || []).push(o); };
+
+    // Function to show rewarded ad (called from Flutter)
+    window.showAdSenseRewardedAd = function(onReward, onDismiss, onError) {
+      try {
+        adBreak({
+          type: 'reward',
+          name: 'ai_credit',
+          beforeReward: function(showAdFn) {
+            showAdFn();
+          },
+          adDismissed: function() {
+            if (onDismiss) onDismiss();
+          },
+          adViewed: function() {
+            if (onReward) onReward(1); // 1 credit
+          },
+          adBreakDone: function(placementInfo) {
+            if (placementInfo.breakStatus === 'notReady') {
+              // Ad not ready, simulate for development
+              console.log('AdSense: Ad not ready, using simulation');
+              setTimeout(function() {
+                if (onReward) onReward(1);
+              }, 2000);
+            }
+          }
+        });
+      } catch (e) {
+        console.error('AdSense error:', e);
+        if (onError) onError(e.message);
+      }
+    };
+  </script>
+
   <!-- Required for Drift web database -->
   <script src="https://cdn.jsdelivr.net/npm/sql.js@1.11.0/dist/sql-wasm.js"></script>
   <script>

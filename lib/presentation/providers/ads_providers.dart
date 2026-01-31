@@ -1,12 +1,21 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/services/ads_service.dart';
+import '../../data/services/adsense_service.dart';
 import '../../data/services/subscription_service.dart';
 
-/// Provider for ads service.
+/// Provider for ads service (mobile - AdMob).
 final adsServiceProvider = Provider<AdsService>((ref) {
   final service = AdsService();
   ref.onDispose(() => service.dispose());
+  return service;
+});
+
+/// Provider for AdSense service (web only).
+final adSenseServiceProvider = Provider<AdSenseService>((ref) {
+  final service = AdSenseService();
+  service.initialize();
   return service;
 });
 
@@ -44,12 +53,21 @@ Future<bool> loadRewardedAdDirect(AdsService service) async {
 /// - UC208: Showing the ad
 /// - UC209: Granting credits after successful view
 /// - UC210: Checking daily limit
+///
+/// Uses AdMob on mobile and AdSense on web.
 Future<AdWatchResult> watchAdForCreditsDirect(
   AdsService adsService,
   SubscriptionService subscriptionService,
   String userId, {
   required bool isPremium,
+  AdSenseService? adSenseService,
 }) async {
+  // Web platform uses AdSense
+  if (kIsWeb && adSenseService != null) {
+    return _watchAdSenseForCredits(adSenseService, subscriptionService, userId);
+  }
+
+  // Mobile platform uses AdMob
   // UC210: Check daily limit
   final canWatch = await adsService.canWatchAd(isPremium: isPremium);
   if (!canWatch) {
@@ -78,6 +96,28 @@ Future<AdWatchResult> watchAdForCreditsDirect(
   }
 
   return AdWatchResult.error('Anuncio nao concluido');
+}
+
+/// Watch AdSense ad on web and grant credits.
+Future<AdWatchResult> _watchAdSenseForCredits(
+  AdSenseService adSenseService,
+  SubscriptionService subscriptionService,
+  String userId,
+) async {
+  try {
+    // Show AdSense rewarded ad
+    final creditsEarned = await adSenseService.showRewardedAd();
+
+    if (creditsEarned > 0) {
+      // Grant credits after watching
+      await subscriptionService.addCreditsFromAd(userId, creditsEarned);
+      return AdWatchResult.success(creditsEarned);
+    }
+
+    return AdWatchResult.error('Anuncio nao concluido');
+  } catch (e) {
+    return AdWatchResult.error('Erro ao mostrar anuncio: $e');
+  }
 }
 
 /// Get daily ads info with cooldown status.

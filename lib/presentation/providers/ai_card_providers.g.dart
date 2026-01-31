@@ -43,29 +43,6 @@ final pdfServiceProvider = Provider<PdfService>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef PdfServiceRef = ProviderRef<PdfService>;
-String _$aiGenerationServiceHash() =>
-    r'bd5423587992c3e73a32d4c41f0d2fc2d89b521f';
-
-/// Provider for the AI generation service.
-///
-/// Uses the configured provider (Gemini or OpenAI).
-///
-/// Copied from [aiGenerationService].
-@ProviderFor(aiGenerationService)
-final aiGenerationServiceProvider =
-    AutoDisposeProvider<AiGenerationService?>.internal(
-  aiGenerationService,
-  name: r'aiGenerationServiceProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$aiGenerationServiceHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef AiGenerationServiceRef = AutoDisposeProviderRef<AiGenerationService?>;
 String _$watchAiProjectsHash() => r'1f180c89062b591b0dd8d7c45373bef869a81fa3';
 
 /// Stream provider for watching all AI projects.
@@ -557,26 +534,5 @@ class _DraftsByProjectProviderElement
   @override
   String get projectId => (origin as DraftsByProjectProvider).projectId;
 }
-
-String _$aiConfigNotifierHash() => r'c8cc0d9667ec09c8867be2bc35117f210e3f6cd8';
-
-/// Provider for AI generation configuration.
-///
-/// Allows switching between Gemini and OpenAI with just a config change.
-///
-/// Copied from [AiConfigNotifier].
-@ProviderFor(AiConfigNotifier)
-final aiConfigNotifierProvider =
-    AutoDisposeAsyncNotifierProvider<AiConfigNotifier, AiConfig>.internal(
-  AiConfigNotifier.new,
-  name: r'aiConfigNotifierProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$aiConfigNotifierHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-typedef _$AiConfigNotifier = AutoDisposeAsyncNotifier<AiConfig>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

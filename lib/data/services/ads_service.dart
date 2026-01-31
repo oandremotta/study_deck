@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// UC208-UC210, UC078-UC088: Rewarded ads service with anti-abuse protection.
@@ -38,12 +40,15 @@ class AdsService {
   static const int suspiciousPatternThreshold = 3; // days with max ads and no study
   static const double abuseScoreThreshold = 0.7;
 
-  // Test ad unit IDs (replace with real IDs in production)
-  static const String _testRewardedAdUnitAndroid =
-      'ca-app-pub-3940256099942544/5224354917';
-  static const String _testRewardedAdUnitIos =
+  // Ad unit IDs
+  // Android: Real production ID
+  static const String _rewardedAdUnitAndroid =
+      'ca-app-pub-2826419607983408/4259633889';
+  // iOS: Test ID (replace with real iOS ad unit when created)
+  static const String _rewardedAdUnitIos =
       'ca-app-pub-3940256099942544/1712485313';
 
+  RewardedAd? _rewardedAd;
   bool _isAdLoaded = false;
   bool _isLoading = false;
 
@@ -60,9 +65,9 @@ class AdsService {
       return '';
     }
     if (defaultTargetPlatform == TargetPlatform.android) {
-      return _testRewardedAdUnitAndroid;
+      return _rewardedAdUnitAndroid;
     } else if (defaultTargetPlatform == TargetPlatform.iOS) {
-      return _testRewardedAdUnitIos;
+      return _rewardedAdUnitIos;
     }
     return '';
   }
@@ -75,8 +80,7 @@ class AdsService {
     }
 
     try {
-      // Initialize MobileAds SDK
-      // await MobileAds.instance.initialize();
+      await MobileAds.instance.initialize();
       debugPrint('AdsService: SDK initialized');
     } catch (e) {
       debugPrint('AdsService: Failed to initialize SDK: $e');
@@ -86,10 +90,7 @@ class AdsService {
   /// Load a rewarded ad.
   Future<bool> loadRewardedAd() async {
     if (kIsWeb) {
-      // Simulate ad loading on web for testing
-      _isLoading = true;
-      await Future.delayed(const Duration(milliseconds: 500));
-      _isLoading = false;
+      // Web uses AdSense, not AdMob
       _isAdLoaded = true;
       return true;
     }
@@ -98,29 +99,29 @@ class AdsService {
 
     _isLoading = true;
 
-    try {
-      // TODO: Implement actual ad loading with google_mobile_ads
-      // RewardedAd.load(
-      //   adUnitId: _adUnitId,
-      //   request: const AdRequest(),
-      //   rewardedAdLoadCallback: RewardedAdLoadCallback(
-      //     onAdLoaded: (ad) {
-      //       _rewardedAd = ad;
-      //       _isAdLoaded = true;
-      //       _isLoading = false;
-      //     },
-      //     onAdFailedToLoad: (error) {
-      //       _isLoading = false;
-      //       debugPrint('Failed to load rewarded ad: ${error.message}');
-      //     },
-      //   ),
-      // );
+    final completer = Completer<bool>();
 
-      // Simulate loading for now
-      await Future.delayed(const Duration(seconds: 1));
-      _isAdLoaded = true;
-      _isLoading = false;
-      return true;
+    try {
+      await RewardedAd.load(
+        adUnitId: _adUnitId,
+        request: const AdRequest(),
+        rewardedAdLoadCallback: RewardedAdLoadCallback(
+          onAdLoaded: (ad) {
+            _rewardedAd = ad;
+            _isAdLoaded = true;
+            _isLoading = false;
+            debugPrint('AdsService: Rewarded ad loaded');
+            completer.complete(true);
+          },
+          onAdFailedToLoad: (error) {
+            _isLoading = false;
+            debugPrint('AdsService: Failed to load rewarded ad: ${error.message}');
+            completer.complete(false);
+          },
+        ),
+      );
+
+      return await completer.future;
     } catch (e) {
       _isLoading = false;
       debugPrint('AdsService: Error loading ad: $e');
@@ -133,31 +134,56 @@ class AdsService {
   /// Returns the number of credits earned (0 if ad was not watched).
   Future<int> showRewardedAd() async {
     if (kIsWeb) {
-      // Simulate watching ad on web
+      // Web uses AdSense - simulate for now
       await Future.delayed(const Duration(seconds: 2));
       _isAdLoaded = false;
       await _recordAdWatched();
       return creditsPerAd;
     }
 
-    if (!_isAdLoaded) {
+    if (!_isAdLoaded || _rewardedAd == null) {
       debugPrint('AdsService: No ad loaded');
       return 0;
     }
 
-    try {
-      // TODO: Implement actual ad showing with google_mobile_ads
-      // await _rewardedAd?.show(
-      //   onUserEarnedReward: (ad, reward) {
-      //     // User earned the reward
-      //   },
-      // );
+    final completer = Completer<int>();
 
-      // Simulate showing ad for now
-      await Future.delayed(const Duration(seconds: 2));
-      _isAdLoaded = false;
-      await _recordAdWatched();
-      return creditsPerAd;
+    try {
+      _rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
+        onAdDismissedFullScreenContent: (ad) {
+          debugPrint('AdsService: Ad dismissed');
+          ad.dispose();
+          _rewardedAd = null;
+          _isAdLoaded = false;
+          // Preload next ad
+          loadRewardedAd();
+        },
+        onAdFailedToShowFullScreenContent: (ad, error) {
+          debugPrint('AdsService: Ad failed to show: ${error.message}');
+          ad.dispose();
+          _rewardedAd = null;
+          _isAdLoaded = false;
+          if (!completer.isCompleted) {
+            completer.complete(0);
+          }
+        },
+      );
+
+      await _rewardedAd!.show(
+        onUserEarnedReward: (ad, reward) async {
+          debugPrint('AdsService: User earned reward: ${reward.amount} ${reward.type}');
+          await _recordAdWatched();
+          if (!completer.isCompleted) {
+            completer.complete(creditsPerAd);
+          }
+        },
+      );
+
+      // Wait for reward or timeout
+      return await completer.future.timeout(
+        const Duration(seconds: 60),
+        onTimeout: () => 0,
+      );
     } catch (e) {
       debugPrint('AdsService: Error showing ad: $e');
       return 0;
@@ -491,8 +517,9 @@ class AdsService {
 
   /// Dispose resources.
   void dispose() {
-    // Dispose rewarded ad if loaded
-    // _rewardedAd?.dispose();
+    _rewardedAd?.dispose();
+    _rewardedAd = null;
+    _isAdLoaded = false;
   }
 }
 

@@ -204,6 +204,7 @@ class _AiCreditsScreenState extends ConsumerState<AiCreditsScreen> {
 
     try {
       final adsService = ref.read(adsServiceProvider);
+      final adSenseService = ref.read(adSenseServiceProvider);
       final subscriptionService = ref.read(subscriptionServiceProvider);
       final subscription = await subscriptionService.getSubscription(_userId);
 
@@ -212,6 +213,7 @@ class _AiCreditsScreenState extends ConsumerState<AiCreditsScreen> {
         subscriptionService,
         _userId,
         isPremium: subscription.isPremium,
+        adSenseService: adSenseService,
       );
 
       if (!mounted) return;
@@ -432,7 +434,7 @@ class _LowBalanceAlert extends StatelessWidget {
 }
 
 /// UC211: Earn credits section with ads option.
-class _EarnCreditsSection extends ConsumerWidget {
+class _EarnCreditsSection extends StatelessWidget {
   final UserSubscription subscription;
   final bool isLoading;
   final VoidCallback onWatchAd;
@@ -444,14 +446,8 @@ class _EarnCreditsSection extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final adsInfoAsync = ref.watch(
-      FutureProvider((ref) => getDailyAdsInfoDirect(
-            ref.read(adsServiceProvider),
-            isPremium: subscription.isPremium,
-          )),
-    );
 
     return Card(
       child: Padding(
@@ -481,47 +477,27 @@ class _EarnCreditsSection extends ConsumerWidget {
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
+            const SizedBox(height: 8),
+            Text(
+              subscription.isPremium
+                  ? 'Ate 5 anuncios por dia (Premium)'
+                  : 'Ate 3 anuncios por dia',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
             const SizedBox(height: 12),
-            adsInfoAsync.when(
-              data: (info) => Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    info.displayText,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  FilledButton.icon(
-                    onPressed: info.canWatch && !isLoading ? onWatchAd : null,
-                    icon: isLoading
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.play_circle_outline),
-                    label: Text(
-                      isLoading
-                          ? 'Carregando...'
-                          : info.canWatch
-                              ? 'Assistir anuncio (+1 credito)'
-                              : 'Limite atingido',
-                    ),
-                  ),
-                ],
-              ),
-              loading: () => const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(8),
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              ),
-              error: (_, __) => FilledButton.icon(
-                onPressed: isLoading ? null : onWatchAd,
-                icon: const Icon(Icons.play_circle_outline),
-                label: const Text('Assistir anuncio'),
+            FilledButton.icon(
+              onPressed: isLoading ? null : onWatchAd,
+              icon: isLoading
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.play_circle_outline),
+              label: Text(
+                isLoading ? 'Carregando...' : 'Assistir anuncio (+1 credito)',
               ),
             ),
           ],
