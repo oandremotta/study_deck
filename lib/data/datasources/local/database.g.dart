@@ -1324,6 +1324,18 @@ class $CardTableTable extends CardTable
   late final GeneratedColumn<String> back = GeneratedColumn<String>(
       'back', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _summaryMeta =
+      const VerificationMeta('summary');
+  @override
+  late final GeneratedColumn<String> summary = GeneratedColumn<String>(
+      'summary', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _keyPhraseMeta =
+      const VerificationMeta('keyPhrase');
+  @override
+  late final GeneratedColumn<String> keyPhrase = GeneratedColumn<String>(
+      'key_phrase', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _hintMeta = const VerificationMeta('hint');
   @override
   late final GeneratedColumn<String> hint = GeneratedColumn<String>(
@@ -1340,6 +1352,40 @@ class $CardTableTable extends CardTable
   @override
   late final GeneratedColumn<String> mediaType = GeneratedColumn<String>(
       'media_type', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _imageUrlMeta =
+      const VerificationMeta('imageUrl');
+  @override
+  late final GeneratedColumn<String> imageUrl = GeneratedColumn<String>(
+      'image_url', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _imageAsFrontMeta =
+      const VerificationMeta('imageAsFront');
+  @override
+  late final GeneratedColumn<bool> imageAsFront = GeneratedColumn<bool>(
+      'image_as_front', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("image_as_front" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _imageUploadStatusMeta =
+      const VerificationMeta('imageUploadStatus');
+  @override
+  late final GeneratedColumn<String> imageUploadStatus =
+      GeneratedColumn<String>('image_upload_status', aliasedName, true,
+          type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _audioUrlMeta =
+      const VerificationMeta('audioUrl');
+  @override
+  late final GeneratedColumn<String> audioUrl = GeneratedColumn<String>(
+      'audio_url', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _pronunciationUrlMeta =
+      const VerificationMeta('pronunciationUrl');
+  @override
+  late final GeneratedColumn<String> pronunciationUrl = GeneratedColumn<String>(
+      'pronunciation_url', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
@@ -1381,9 +1427,16 @@ class $CardTableTable extends CardTable
         deckId,
         front,
         back,
+        summary,
+        keyPhrase,
         hint,
         mediaPath,
         mediaType,
+        imageUrl,
+        imageAsFront,
+        imageUploadStatus,
+        audioUrl,
+        pronunciationUrl,
         createdAt,
         updatedAt,
         deletedAt,
@@ -1423,6 +1476,14 @@ class $CardTableTable extends CardTable
     } else if (isInserting) {
       context.missing(_backMeta);
     }
+    if (data.containsKey('summary')) {
+      context.handle(_summaryMeta,
+          summary.isAcceptableOrUnknown(data['summary']!, _summaryMeta));
+    }
+    if (data.containsKey('key_phrase')) {
+      context.handle(_keyPhraseMeta,
+          keyPhrase.isAcceptableOrUnknown(data['key_phrase']!, _keyPhraseMeta));
+    }
     if (data.containsKey('hint')) {
       context.handle(
           _hintMeta, hint.isAcceptableOrUnknown(data['hint']!, _hintMeta));
@@ -1434,6 +1495,32 @@ class $CardTableTable extends CardTable
     if (data.containsKey('media_type')) {
       context.handle(_mediaTypeMeta,
           mediaType.isAcceptableOrUnknown(data['media_type']!, _mediaTypeMeta));
+    }
+    if (data.containsKey('image_url')) {
+      context.handle(_imageUrlMeta,
+          imageUrl.isAcceptableOrUnknown(data['image_url']!, _imageUrlMeta));
+    }
+    if (data.containsKey('image_as_front')) {
+      context.handle(
+          _imageAsFrontMeta,
+          imageAsFront.isAcceptableOrUnknown(
+              data['image_as_front']!, _imageAsFrontMeta));
+    }
+    if (data.containsKey('image_upload_status')) {
+      context.handle(
+          _imageUploadStatusMeta,
+          imageUploadStatus.isAcceptableOrUnknown(
+              data['image_upload_status']!, _imageUploadStatusMeta));
+    }
+    if (data.containsKey('audio_url')) {
+      context.handle(_audioUrlMeta,
+          audioUrl.isAcceptableOrUnknown(data['audio_url']!, _audioUrlMeta));
+    }
+    if (data.containsKey('pronunciation_url')) {
+      context.handle(
+          _pronunciationUrlMeta,
+          pronunciationUrl.isAcceptableOrUnknown(
+              data['pronunciation_url']!, _pronunciationUrlMeta));
     }
     if (data.containsKey('created_at')) {
       context.handle(_createdAtMeta,
@@ -1476,12 +1563,26 @@ class $CardTableTable extends CardTable
           .read(DriftSqlType.string, data['${effectivePrefix}front'])!,
       back: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}back'])!,
+      summary: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}summary']),
+      keyPhrase: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}key_phrase']),
       hint: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}hint']),
       mediaPath: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}media_path']),
       mediaType: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}media_type']),
+      imageUrl: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}image_url']),
+      imageAsFront: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}image_as_front'])!,
+      imageUploadStatus: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}image_upload_status']),
+      audioUrl: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}audio_url']),
+      pronunciationUrl: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}pronunciation_url']),
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
       updatedAt: attachedDatabase.typeMapping
@@ -1511,17 +1612,38 @@ class CardTableData extends DataClass implements Insertable<CardTableData> {
   /// Front side content (question).
   final String front;
 
-  /// Back side content (answer).
+  /// Back side content (full explanation/answer).
   final String back;
+
+  /// Short answer/summary (≤240 chars) - required for new cards.
+  final String? summary;
+
+  /// Memory anchor phrase (≤120 chars) - required for new cards.
+  final String? keyPhrase;
 
   /// Optional hint.
   final String? hint;
 
-  /// Path to attached media file.
+  /// Path to attached media file (local).
   final String? mediaPath;
 
   /// Type of media ('image', 'audio').
   final String? mediaType;
+
+  /// URL of the image in Firebase Storage.
+  final String? imageUrl;
+
+  /// Whether to use the image as the front of the card (UC125).
+  final bool imageAsFront;
+
+  /// Status of image upload ('pending', 'uploading', 'completed', 'failed').
+  final String? imageUploadStatus;
+
+  /// UC201-202: URL of AI-generated TTS audio in Firebase Storage.
+  final String? audioUrl;
+
+  /// UC203: URL of user-recorded pronunciation audio.
+  final String? pronunciationUrl;
 
   /// When the card was created.
   final DateTime createdAt;
@@ -1542,9 +1664,16 @@ class CardTableData extends DataClass implements Insertable<CardTableData> {
       required this.deckId,
       required this.front,
       required this.back,
+      this.summary,
+      this.keyPhrase,
       this.hint,
       this.mediaPath,
       this.mediaType,
+      this.imageUrl,
+      required this.imageAsFront,
+      this.imageUploadStatus,
+      this.audioUrl,
+      this.pronunciationUrl,
       required this.createdAt,
       required this.updatedAt,
       this.deletedAt,
@@ -1557,6 +1686,12 @@ class CardTableData extends DataClass implements Insertable<CardTableData> {
     map['deck_id'] = Variable<String>(deckId);
     map['front'] = Variable<String>(front);
     map['back'] = Variable<String>(back);
+    if (!nullToAbsent || summary != null) {
+      map['summary'] = Variable<String>(summary);
+    }
+    if (!nullToAbsent || keyPhrase != null) {
+      map['key_phrase'] = Variable<String>(keyPhrase);
+    }
     if (!nullToAbsent || hint != null) {
       map['hint'] = Variable<String>(hint);
     }
@@ -1565,6 +1700,19 @@ class CardTableData extends DataClass implements Insertable<CardTableData> {
     }
     if (!nullToAbsent || mediaType != null) {
       map['media_type'] = Variable<String>(mediaType);
+    }
+    if (!nullToAbsent || imageUrl != null) {
+      map['image_url'] = Variable<String>(imageUrl);
+    }
+    map['image_as_front'] = Variable<bool>(imageAsFront);
+    if (!nullToAbsent || imageUploadStatus != null) {
+      map['image_upload_status'] = Variable<String>(imageUploadStatus);
+    }
+    if (!nullToAbsent || audioUrl != null) {
+      map['audio_url'] = Variable<String>(audioUrl);
+    }
+    if (!nullToAbsent || pronunciationUrl != null) {
+      map['pronunciation_url'] = Variable<String>(pronunciationUrl);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
@@ -1584,6 +1732,12 @@ class CardTableData extends DataClass implements Insertable<CardTableData> {
       deckId: Value(deckId),
       front: Value(front),
       back: Value(back),
+      summary: summary == null && nullToAbsent
+          ? const Value.absent()
+          : Value(summary),
+      keyPhrase: keyPhrase == null && nullToAbsent
+          ? const Value.absent()
+          : Value(keyPhrase),
       hint: hint == null && nullToAbsent ? const Value.absent() : Value(hint),
       mediaPath: mediaPath == null && nullToAbsent
           ? const Value.absent()
@@ -1591,6 +1745,19 @@ class CardTableData extends DataClass implements Insertable<CardTableData> {
       mediaType: mediaType == null && nullToAbsent
           ? const Value.absent()
           : Value(mediaType),
+      imageUrl: imageUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(imageUrl),
+      imageAsFront: Value(imageAsFront),
+      imageUploadStatus: imageUploadStatus == null && nullToAbsent
+          ? const Value.absent()
+          : Value(imageUploadStatus),
+      audioUrl: audioUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(audioUrl),
+      pronunciationUrl: pronunciationUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(pronunciationUrl),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       deletedAt: deletedAt == null && nullToAbsent
@@ -1611,9 +1778,17 @@ class CardTableData extends DataClass implements Insertable<CardTableData> {
       deckId: serializer.fromJson<String>(json['deckId']),
       front: serializer.fromJson<String>(json['front']),
       back: serializer.fromJson<String>(json['back']),
+      summary: serializer.fromJson<String?>(json['summary']),
+      keyPhrase: serializer.fromJson<String?>(json['keyPhrase']),
       hint: serializer.fromJson<String?>(json['hint']),
       mediaPath: serializer.fromJson<String?>(json['mediaPath']),
       mediaType: serializer.fromJson<String?>(json['mediaType']),
+      imageUrl: serializer.fromJson<String?>(json['imageUrl']),
+      imageAsFront: serializer.fromJson<bool>(json['imageAsFront']),
+      imageUploadStatus:
+          serializer.fromJson<String?>(json['imageUploadStatus']),
+      audioUrl: serializer.fromJson<String?>(json['audioUrl']),
+      pronunciationUrl: serializer.fromJson<String?>(json['pronunciationUrl']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
@@ -1629,9 +1804,16 @@ class CardTableData extends DataClass implements Insertable<CardTableData> {
       'deckId': serializer.toJson<String>(deckId),
       'front': serializer.toJson<String>(front),
       'back': serializer.toJson<String>(back),
+      'summary': serializer.toJson<String?>(summary),
+      'keyPhrase': serializer.toJson<String?>(keyPhrase),
       'hint': serializer.toJson<String?>(hint),
       'mediaPath': serializer.toJson<String?>(mediaPath),
       'mediaType': serializer.toJson<String?>(mediaType),
+      'imageUrl': serializer.toJson<String?>(imageUrl),
+      'imageAsFront': serializer.toJson<bool>(imageAsFront),
+      'imageUploadStatus': serializer.toJson<String?>(imageUploadStatus),
+      'audioUrl': serializer.toJson<String?>(audioUrl),
+      'pronunciationUrl': serializer.toJson<String?>(pronunciationUrl),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
@@ -1645,9 +1827,16 @@ class CardTableData extends DataClass implements Insertable<CardTableData> {
           String? deckId,
           String? front,
           String? back,
+          Value<String?> summary = const Value.absent(),
+          Value<String?> keyPhrase = const Value.absent(),
           Value<String?> hint = const Value.absent(),
           Value<String?> mediaPath = const Value.absent(),
           Value<String?> mediaType = const Value.absent(),
+          Value<String?> imageUrl = const Value.absent(),
+          bool? imageAsFront,
+          Value<String?> imageUploadStatus = const Value.absent(),
+          Value<String?> audioUrl = const Value.absent(),
+          Value<String?> pronunciationUrl = const Value.absent(),
           DateTime? createdAt,
           DateTime? updatedAt,
           Value<DateTime?> deletedAt = const Value.absent(),
@@ -1658,9 +1847,20 @@ class CardTableData extends DataClass implements Insertable<CardTableData> {
         deckId: deckId ?? this.deckId,
         front: front ?? this.front,
         back: back ?? this.back,
+        summary: summary.present ? summary.value : this.summary,
+        keyPhrase: keyPhrase.present ? keyPhrase.value : this.keyPhrase,
         hint: hint.present ? hint.value : this.hint,
         mediaPath: mediaPath.present ? mediaPath.value : this.mediaPath,
         mediaType: mediaType.present ? mediaType.value : this.mediaType,
+        imageUrl: imageUrl.present ? imageUrl.value : this.imageUrl,
+        imageAsFront: imageAsFront ?? this.imageAsFront,
+        imageUploadStatus: imageUploadStatus.present
+            ? imageUploadStatus.value
+            : this.imageUploadStatus,
+        audioUrl: audioUrl.present ? audioUrl.value : this.audioUrl,
+        pronunciationUrl: pronunciationUrl.present
+            ? pronunciationUrl.value
+            : this.pronunciationUrl,
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
         deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -1673,9 +1873,22 @@ class CardTableData extends DataClass implements Insertable<CardTableData> {
       deckId: data.deckId.present ? data.deckId.value : this.deckId,
       front: data.front.present ? data.front.value : this.front,
       back: data.back.present ? data.back.value : this.back,
+      summary: data.summary.present ? data.summary.value : this.summary,
+      keyPhrase: data.keyPhrase.present ? data.keyPhrase.value : this.keyPhrase,
       hint: data.hint.present ? data.hint.value : this.hint,
       mediaPath: data.mediaPath.present ? data.mediaPath.value : this.mediaPath,
       mediaType: data.mediaType.present ? data.mediaType.value : this.mediaType,
+      imageUrl: data.imageUrl.present ? data.imageUrl.value : this.imageUrl,
+      imageAsFront: data.imageAsFront.present
+          ? data.imageAsFront.value
+          : this.imageAsFront,
+      imageUploadStatus: data.imageUploadStatus.present
+          ? data.imageUploadStatus.value
+          : this.imageUploadStatus,
+      audioUrl: data.audioUrl.present ? data.audioUrl.value : this.audioUrl,
+      pronunciationUrl: data.pronunciationUrl.present
+          ? data.pronunciationUrl.value
+          : this.pronunciationUrl,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -1691,9 +1904,16 @@ class CardTableData extends DataClass implements Insertable<CardTableData> {
           ..write('deckId: $deckId, ')
           ..write('front: $front, ')
           ..write('back: $back, ')
+          ..write('summary: $summary, ')
+          ..write('keyPhrase: $keyPhrase, ')
           ..write('hint: $hint, ')
           ..write('mediaPath: $mediaPath, ')
           ..write('mediaType: $mediaType, ')
+          ..write('imageUrl: $imageUrl, ')
+          ..write('imageAsFront: $imageAsFront, ')
+          ..write('imageUploadStatus: $imageUploadStatus, ')
+          ..write('audioUrl: $audioUrl, ')
+          ..write('pronunciationUrl: $pronunciationUrl, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -1704,8 +1924,26 @@ class CardTableData extends DataClass implements Insertable<CardTableData> {
   }
 
   @override
-  int get hashCode => Object.hash(id, deckId, front, back, hint, mediaPath,
-      mediaType, createdAt, updatedAt, deletedAt, isSynced, remoteId);
+  int get hashCode => Object.hash(
+      id,
+      deckId,
+      front,
+      back,
+      summary,
+      keyPhrase,
+      hint,
+      mediaPath,
+      mediaType,
+      imageUrl,
+      imageAsFront,
+      imageUploadStatus,
+      audioUrl,
+      pronunciationUrl,
+      createdAt,
+      updatedAt,
+      deletedAt,
+      isSynced,
+      remoteId);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1714,9 +1952,16 @@ class CardTableData extends DataClass implements Insertable<CardTableData> {
           other.deckId == this.deckId &&
           other.front == this.front &&
           other.back == this.back &&
+          other.summary == this.summary &&
+          other.keyPhrase == this.keyPhrase &&
           other.hint == this.hint &&
           other.mediaPath == this.mediaPath &&
           other.mediaType == this.mediaType &&
+          other.imageUrl == this.imageUrl &&
+          other.imageAsFront == this.imageAsFront &&
+          other.imageUploadStatus == this.imageUploadStatus &&
+          other.audioUrl == this.audioUrl &&
+          other.pronunciationUrl == this.pronunciationUrl &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt &&
@@ -1729,9 +1974,16 @@ class CardTableCompanion extends UpdateCompanion<CardTableData> {
   final Value<String> deckId;
   final Value<String> front;
   final Value<String> back;
+  final Value<String?> summary;
+  final Value<String?> keyPhrase;
   final Value<String?> hint;
   final Value<String?> mediaPath;
   final Value<String?> mediaType;
+  final Value<String?> imageUrl;
+  final Value<bool> imageAsFront;
+  final Value<String?> imageUploadStatus;
+  final Value<String?> audioUrl;
+  final Value<String?> pronunciationUrl;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<DateTime?> deletedAt;
@@ -1743,9 +1995,16 @@ class CardTableCompanion extends UpdateCompanion<CardTableData> {
     this.deckId = const Value.absent(),
     this.front = const Value.absent(),
     this.back = const Value.absent(),
+    this.summary = const Value.absent(),
+    this.keyPhrase = const Value.absent(),
     this.hint = const Value.absent(),
     this.mediaPath = const Value.absent(),
     this.mediaType = const Value.absent(),
+    this.imageUrl = const Value.absent(),
+    this.imageAsFront = const Value.absent(),
+    this.imageUploadStatus = const Value.absent(),
+    this.audioUrl = const Value.absent(),
+    this.pronunciationUrl = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -1758,9 +2017,16 @@ class CardTableCompanion extends UpdateCompanion<CardTableData> {
     required String deckId,
     required String front,
     required String back,
+    this.summary = const Value.absent(),
+    this.keyPhrase = const Value.absent(),
     this.hint = const Value.absent(),
     this.mediaPath = const Value.absent(),
     this.mediaType = const Value.absent(),
+    this.imageUrl = const Value.absent(),
+    this.imageAsFront = const Value.absent(),
+    this.imageUploadStatus = const Value.absent(),
+    this.audioUrl = const Value.absent(),
+    this.pronunciationUrl = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.deletedAt = const Value.absent(),
@@ -1778,9 +2044,16 @@ class CardTableCompanion extends UpdateCompanion<CardTableData> {
     Expression<String>? deckId,
     Expression<String>? front,
     Expression<String>? back,
+    Expression<String>? summary,
+    Expression<String>? keyPhrase,
     Expression<String>? hint,
     Expression<String>? mediaPath,
     Expression<String>? mediaType,
+    Expression<String>? imageUrl,
+    Expression<bool>? imageAsFront,
+    Expression<String>? imageUploadStatus,
+    Expression<String>? audioUrl,
+    Expression<String>? pronunciationUrl,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
@@ -1793,9 +2066,16 @@ class CardTableCompanion extends UpdateCompanion<CardTableData> {
       if (deckId != null) 'deck_id': deckId,
       if (front != null) 'front': front,
       if (back != null) 'back': back,
+      if (summary != null) 'summary': summary,
+      if (keyPhrase != null) 'key_phrase': keyPhrase,
       if (hint != null) 'hint': hint,
       if (mediaPath != null) 'media_path': mediaPath,
       if (mediaType != null) 'media_type': mediaType,
+      if (imageUrl != null) 'image_url': imageUrl,
+      if (imageAsFront != null) 'image_as_front': imageAsFront,
+      if (imageUploadStatus != null) 'image_upload_status': imageUploadStatus,
+      if (audioUrl != null) 'audio_url': audioUrl,
+      if (pronunciationUrl != null) 'pronunciation_url': pronunciationUrl,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
@@ -1810,9 +2090,16 @@ class CardTableCompanion extends UpdateCompanion<CardTableData> {
       Value<String>? deckId,
       Value<String>? front,
       Value<String>? back,
+      Value<String?>? summary,
+      Value<String?>? keyPhrase,
       Value<String?>? hint,
       Value<String?>? mediaPath,
       Value<String?>? mediaType,
+      Value<String?>? imageUrl,
+      Value<bool>? imageAsFront,
+      Value<String?>? imageUploadStatus,
+      Value<String?>? audioUrl,
+      Value<String?>? pronunciationUrl,
       Value<DateTime>? createdAt,
       Value<DateTime>? updatedAt,
       Value<DateTime?>? deletedAt,
@@ -1824,9 +2111,16 @@ class CardTableCompanion extends UpdateCompanion<CardTableData> {
       deckId: deckId ?? this.deckId,
       front: front ?? this.front,
       back: back ?? this.back,
+      summary: summary ?? this.summary,
+      keyPhrase: keyPhrase ?? this.keyPhrase,
       hint: hint ?? this.hint,
       mediaPath: mediaPath ?? this.mediaPath,
       mediaType: mediaType ?? this.mediaType,
+      imageUrl: imageUrl ?? this.imageUrl,
+      imageAsFront: imageAsFront ?? this.imageAsFront,
+      imageUploadStatus: imageUploadStatus ?? this.imageUploadStatus,
+      audioUrl: audioUrl ?? this.audioUrl,
+      pronunciationUrl: pronunciationUrl ?? this.pronunciationUrl,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
@@ -1851,6 +2145,12 @@ class CardTableCompanion extends UpdateCompanion<CardTableData> {
     if (back.present) {
       map['back'] = Variable<String>(back.value);
     }
+    if (summary.present) {
+      map['summary'] = Variable<String>(summary.value);
+    }
+    if (keyPhrase.present) {
+      map['key_phrase'] = Variable<String>(keyPhrase.value);
+    }
     if (hint.present) {
       map['hint'] = Variable<String>(hint.value);
     }
@@ -1859,6 +2159,21 @@ class CardTableCompanion extends UpdateCompanion<CardTableData> {
     }
     if (mediaType.present) {
       map['media_type'] = Variable<String>(mediaType.value);
+    }
+    if (imageUrl.present) {
+      map['image_url'] = Variable<String>(imageUrl.value);
+    }
+    if (imageAsFront.present) {
+      map['image_as_front'] = Variable<bool>(imageAsFront.value);
+    }
+    if (imageUploadStatus.present) {
+      map['image_upload_status'] = Variable<String>(imageUploadStatus.value);
+    }
+    if (audioUrl.present) {
+      map['audio_url'] = Variable<String>(audioUrl.value);
+    }
+    if (pronunciationUrl.present) {
+      map['pronunciation_url'] = Variable<String>(pronunciationUrl.value);
     }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
@@ -1888,9 +2203,16 @@ class CardTableCompanion extends UpdateCompanion<CardTableData> {
           ..write('deckId: $deckId, ')
           ..write('front: $front, ')
           ..write('back: $back, ')
+          ..write('summary: $summary, ')
+          ..write('keyPhrase: $keyPhrase, ')
           ..write('hint: $hint, ')
           ..write('mediaPath: $mediaPath, ')
           ..write('mediaType: $mediaType, ')
+          ..write('imageUrl: $imageUrl, ')
+          ..write('imageAsFront: $imageAsFront, ')
+          ..write('imageUploadStatus: $imageUploadStatus, ')
+          ..write('audioUrl: $audioUrl, ')
+          ..write('pronunciationUrl: $pronunciationUrl, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -5317,6 +5639,1719 @@ class UserStatsTableCompanion extends UpdateCompanion<UserStatsTableData> {
   }
 }
 
+class $AiProjectTableTable extends AiProjectTable
+    with TableInfo<$AiProjectTableTable, AiProjectTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AiProjectTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+      'user_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _sourceTypeMeta =
+      const VerificationMeta('sourceType');
+  @override
+  late final GeneratedColumn<String> sourceType = GeneratedColumn<String>(
+      'source_type', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _fileNameMeta =
+      const VerificationMeta('fileName');
+  @override
+  late final GeneratedColumn<String> fileName = GeneratedColumn<String>(
+      'file_name', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _pdfStoragePathMeta =
+      const VerificationMeta('pdfStoragePath');
+  @override
+  late final GeneratedColumn<String> pdfStoragePath = GeneratedColumn<String>(
+      'pdf_storage_path', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _extractedTextMeta =
+      const VerificationMeta('extractedText');
+  @override
+  late final GeneratedColumn<String> extractedText = GeneratedColumn<String>(
+      'extracted_text', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _topicMeta = const VerificationMeta('topic');
+  @override
+  late final GeneratedColumn<String> topic = GeneratedColumn<String>(
+      'topic', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _configJsonMeta =
+      const VerificationMeta('configJson');
+  @override
+  late final GeneratedColumn<String> configJson = GeneratedColumn<String>(
+      'config_json', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('{}'));
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+      'status', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('created'));
+  static const VerificationMeta _errorMessageMeta =
+      const VerificationMeta('errorMessage');
+  @override
+  late final GeneratedColumn<String> errorMessage = GeneratedColumn<String>(
+      'error_message', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _requestedCardCountMeta =
+      const VerificationMeta('requestedCardCount');
+  @override
+  late final GeneratedColumn<int> requestedCardCount = GeneratedColumn<int>(
+      'requested_card_count', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(10));
+  static const VerificationMeta _generatedCardCountMeta =
+      const VerificationMeta('generatedCardCount');
+  @override
+  late final GeneratedColumn<int> generatedCardCount = GeneratedColumn<int>(
+      'generated_card_count', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _approvedCardCountMeta =
+      const VerificationMeta('approvedCardCount');
+  @override
+  late final GeneratedColumn<int> approvedCardCount = GeneratedColumn<int>(
+      'approved_card_count', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _targetDeckIdMeta =
+      const VerificationMeta('targetDeckId');
+  @override
+  late final GeneratedColumn<String> targetDeckId = GeneratedColumn<String>(
+      'target_deck_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _completedAtMeta =
+      const VerificationMeta('completedAt');
+  @override
+  late final GeneratedColumn<DateTime> completedAt = GeneratedColumn<DateTime>(
+      'completed_at', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        userId,
+        sourceType,
+        fileName,
+        pdfStoragePath,
+        extractedText,
+        topic,
+        configJson,
+        status,
+        errorMessage,
+        requestedCardCount,
+        generatedCardCount,
+        approvedCardCount,
+        targetDeckId,
+        createdAt,
+        updatedAt,
+        completedAt
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'ai_projects';
+  @override
+  VerificationContext validateIntegrity(Insertable<AiProjectTableData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('user_id')) {
+      context.handle(_userIdMeta,
+          userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta));
+    } else if (isInserting) {
+      context.missing(_userIdMeta);
+    }
+    if (data.containsKey('source_type')) {
+      context.handle(
+          _sourceTypeMeta,
+          sourceType.isAcceptableOrUnknown(
+              data['source_type']!, _sourceTypeMeta));
+    } else if (isInserting) {
+      context.missing(_sourceTypeMeta);
+    }
+    if (data.containsKey('file_name')) {
+      context.handle(_fileNameMeta,
+          fileName.isAcceptableOrUnknown(data['file_name']!, _fileNameMeta));
+    }
+    if (data.containsKey('pdf_storage_path')) {
+      context.handle(
+          _pdfStoragePathMeta,
+          pdfStoragePath.isAcceptableOrUnknown(
+              data['pdf_storage_path']!, _pdfStoragePathMeta));
+    }
+    if (data.containsKey('extracted_text')) {
+      context.handle(
+          _extractedTextMeta,
+          extractedText.isAcceptableOrUnknown(
+              data['extracted_text']!, _extractedTextMeta));
+    }
+    if (data.containsKey('topic')) {
+      context.handle(
+          _topicMeta, topic.isAcceptableOrUnknown(data['topic']!, _topicMeta));
+    }
+    if (data.containsKey('config_json')) {
+      context.handle(
+          _configJsonMeta,
+          configJson.isAcceptableOrUnknown(
+              data['config_json']!, _configJsonMeta));
+    }
+    if (data.containsKey('status')) {
+      context.handle(_statusMeta,
+          status.isAcceptableOrUnknown(data['status']!, _statusMeta));
+    }
+    if (data.containsKey('error_message')) {
+      context.handle(
+          _errorMessageMeta,
+          errorMessage.isAcceptableOrUnknown(
+              data['error_message']!, _errorMessageMeta));
+    }
+    if (data.containsKey('requested_card_count')) {
+      context.handle(
+          _requestedCardCountMeta,
+          requestedCardCount.isAcceptableOrUnknown(
+              data['requested_card_count']!, _requestedCardCountMeta));
+    }
+    if (data.containsKey('generated_card_count')) {
+      context.handle(
+          _generatedCardCountMeta,
+          generatedCardCount.isAcceptableOrUnknown(
+              data['generated_card_count']!, _generatedCardCountMeta));
+    }
+    if (data.containsKey('approved_card_count')) {
+      context.handle(
+          _approvedCardCountMeta,
+          approvedCardCount.isAcceptableOrUnknown(
+              data['approved_card_count']!, _approvedCardCountMeta));
+    }
+    if (data.containsKey('target_deck_id')) {
+      context.handle(
+          _targetDeckIdMeta,
+          targetDeckId.isAcceptableOrUnknown(
+              data['target_deck_id']!, _targetDeckIdMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('completed_at')) {
+      context.handle(
+          _completedAtMeta,
+          completedAt.isAcceptableOrUnknown(
+              data['completed_at']!, _completedAtMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  AiProjectTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AiProjectTableData(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      userId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}user_id'])!,
+      sourceType: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}source_type'])!,
+      fileName: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}file_name']),
+      pdfStoragePath: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}pdf_storage_path']),
+      extractedText: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}extracted_text']),
+      topic: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}topic']),
+      configJson: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}config_json'])!,
+      status: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}status'])!,
+      errorMessage: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}error_message']),
+      requestedCardCount: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}requested_card_count'])!,
+      generatedCardCount: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}generated_card_count'])!,
+      approvedCardCount: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}approved_card_count'])!,
+      targetDeckId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}target_deck_id']),
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      completedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}completed_at']),
+    );
+  }
+
+  @override
+  $AiProjectTableTable createAlias(String alias) {
+    return $AiProjectTableTable(attachedDatabase, alias);
+  }
+}
+
+class AiProjectTableData extends DataClass
+    implements Insertable<AiProjectTableData> {
+  /// Unique identifier.
+  final String id;
+
+  /// User who created this project.
+  final String userId;
+
+  /// Source type: 'pdf', 'text', 'topic'.
+  final String sourceType;
+
+  /// Original file name (for PDF source).
+  final String? fileName;
+
+  /// Firebase Storage path for PDF.
+  final String? pdfStoragePath;
+
+  /// Extracted or pasted text content.
+  final String? extractedText;
+
+  /// Topic/subject for generation (for topic source).
+  final String? topic;
+
+  /// Generation configuration as JSON.
+  final String configJson;
+
+  /// Current status: 'created', 'extracting', 'generating', 'review', 'completed', 'failed'.
+  final String status;
+
+  /// Error message if failed.
+  final String? errorMessage;
+
+  /// Number of cards requested.
+  final int requestedCardCount;
+
+  /// Number of cards actually generated.
+  final int generatedCardCount;
+
+  /// Number of cards approved by user.
+  final int approvedCardCount;
+
+  /// Target deck for import.
+  final String? targetDeckId;
+
+  /// When the project was created.
+  final DateTime createdAt;
+
+  /// When the project was last updated.
+  final DateTime updatedAt;
+
+  /// When the project was completed.
+  final DateTime? completedAt;
+  const AiProjectTableData(
+      {required this.id,
+      required this.userId,
+      required this.sourceType,
+      this.fileName,
+      this.pdfStoragePath,
+      this.extractedText,
+      this.topic,
+      required this.configJson,
+      required this.status,
+      this.errorMessage,
+      required this.requestedCardCount,
+      required this.generatedCardCount,
+      required this.approvedCardCount,
+      this.targetDeckId,
+      required this.createdAt,
+      required this.updatedAt,
+      this.completedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['user_id'] = Variable<String>(userId);
+    map['source_type'] = Variable<String>(sourceType);
+    if (!nullToAbsent || fileName != null) {
+      map['file_name'] = Variable<String>(fileName);
+    }
+    if (!nullToAbsent || pdfStoragePath != null) {
+      map['pdf_storage_path'] = Variable<String>(pdfStoragePath);
+    }
+    if (!nullToAbsent || extractedText != null) {
+      map['extracted_text'] = Variable<String>(extractedText);
+    }
+    if (!nullToAbsent || topic != null) {
+      map['topic'] = Variable<String>(topic);
+    }
+    map['config_json'] = Variable<String>(configJson);
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || errorMessage != null) {
+      map['error_message'] = Variable<String>(errorMessage);
+    }
+    map['requested_card_count'] = Variable<int>(requestedCardCount);
+    map['generated_card_count'] = Variable<int>(generatedCardCount);
+    map['approved_card_count'] = Variable<int>(approvedCardCount);
+    if (!nullToAbsent || targetDeckId != null) {
+      map['target_deck_id'] = Variable<String>(targetDeckId);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || completedAt != null) {
+      map['completed_at'] = Variable<DateTime>(completedAt);
+    }
+    return map;
+  }
+
+  AiProjectTableCompanion toCompanion(bool nullToAbsent) {
+    return AiProjectTableCompanion(
+      id: Value(id),
+      userId: Value(userId),
+      sourceType: Value(sourceType),
+      fileName: fileName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(fileName),
+      pdfStoragePath: pdfStoragePath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(pdfStoragePath),
+      extractedText: extractedText == null && nullToAbsent
+          ? const Value.absent()
+          : Value(extractedText),
+      topic:
+          topic == null && nullToAbsent ? const Value.absent() : Value(topic),
+      configJson: Value(configJson),
+      status: Value(status),
+      errorMessage: errorMessage == null && nullToAbsent
+          ? const Value.absent()
+          : Value(errorMessage),
+      requestedCardCount: Value(requestedCardCount),
+      generatedCardCount: Value(generatedCardCount),
+      approvedCardCount: Value(approvedCardCount),
+      targetDeckId: targetDeckId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(targetDeckId),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      completedAt: completedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(completedAt),
+    );
+  }
+
+  factory AiProjectTableData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AiProjectTableData(
+      id: serializer.fromJson<String>(json['id']),
+      userId: serializer.fromJson<String>(json['userId']),
+      sourceType: serializer.fromJson<String>(json['sourceType']),
+      fileName: serializer.fromJson<String?>(json['fileName']),
+      pdfStoragePath: serializer.fromJson<String?>(json['pdfStoragePath']),
+      extractedText: serializer.fromJson<String?>(json['extractedText']),
+      topic: serializer.fromJson<String?>(json['topic']),
+      configJson: serializer.fromJson<String>(json['configJson']),
+      status: serializer.fromJson<String>(json['status']),
+      errorMessage: serializer.fromJson<String?>(json['errorMessage']),
+      requestedCardCount: serializer.fromJson<int>(json['requestedCardCount']),
+      generatedCardCount: serializer.fromJson<int>(json['generatedCardCount']),
+      approvedCardCount: serializer.fromJson<int>(json['approvedCardCount']),
+      targetDeckId: serializer.fromJson<String?>(json['targetDeckId']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      completedAt: serializer.fromJson<DateTime?>(json['completedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'userId': serializer.toJson<String>(userId),
+      'sourceType': serializer.toJson<String>(sourceType),
+      'fileName': serializer.toJson<String?>(fileName),
+      'pdfStoragePath': serializer.toJson<String?>(pdfStoragePath),
+      'extractedText': serializer.toJson<String?>(extractedText),
+      'topic': serializer.toJson<String?>(topic),
+      'configJson': serializer.toJson<String>(configJson),
+      'status': serializer.toJson<String>(status),
+      'errorMessage': serializer.toJson<String?>(errorMessage),
+      'requestedCardCount': serializer.toJson<int>(requestedCardCount),
+      'generatedCardCount': serializer.toJson<int>(generatedCardCount),
+      'approvedCardCount': serializer.toJson<int>(approvedCardCount),
+      'targetDeckId': serializer.toJson<String?>(targetDeckId),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'completedAt': serializer.toJson<DateTime?>(completedAt),
+    };
+  }
+
+  AiProjectTableData copyWith(
+          {String? id,
+          String? userId,
+          String? sourceType,
+          Value<String?> fileName = const Value.absent(),
+          Value<String?> pdfStoragePath = const Value.absent(),
+          Value<String?> extractedText = const Value.absent(),
+          Value<String?> topic = const Value.absent(),
+          String? configJson,
+          String? status,
+          Value<String?> errorMessage = const Value.absent(),
+          int? requestedCardCount,
+          int? generatedCardCount,
+          int? approvedCardCount,
+          Value<String?> targetDeckId = const Value.absent(),
+          DateTime? createdAt,
+          DateTime? updatedAt,
+          Value<DateTime?> completedAt = const Value.absent()}) =>
+      AiProjectTableData(
+        id: id ?? this.id,
+        userId: userId ?? this.userId,
+        sourceType: sourceType ?? this.sourceType,
+        fileName: fileName.present ? fileName.value : this.fileName,
+        pdfStoragePath:
+            pdfStoragePath.present ? pdfStoragePath.value : this.pdfStoragePath,
+        extractedText:
+            extractedText.present ? extractedText.value : this.extractedText,
+        topic: topic.present ? topic.value : this.topic,
+        configJson: configJson ?? this.configJson,
+        status: status ?? this.status,
+        errorMessage:
+            errorMessage.present ? errorMessage.value : this.errorMessage,
+        requestedCardCount: requestedCardCount ?? this.requestedCardCount,
+        generatedCardCount: generatedCardCount ?? this.generatedCardCount,
+        approvedCardCount: approvedCardCount ?? this.approvedCardCount,
+        targetDeckId:
+            targetDeckId.present ? targetDeckId.value : this.targetDeckId,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+        completedAt: completedAt.present ? completedAt.value : this.completedAt,
+      );
+  AiProjectTableData copyWithCompanion(AiProjectTableCompanion data) {
+    return AiProjectTableData(
+      id: data.id.present ? data.id.value : this.id,
+      userId: data.userId.present ? data.userId.value : this.userId,
+      sourceType:
+          data.sourceType.present ? data.sourceType.value : this.sourceType,
+      fileName: data.fileName.present ? data.fileName.value : this.fileName,
+      pdfStoragePath: data.pdfStoragePath.present
+          ? data.pdfStoragePath.value
+          : this.pdfStoragePath,
+      extractedText: data.extractedText.present
+          ? data.extractedText.value
+          : this.extractedText,
+      topic: data.topic.present ? data.topic.value : this.topic,
+      configJson:
+          data.configJson.present ? data.configJson.value : this.configJson,
+      status: data.status.present ? data.status.value : this.status,
+      errorMessage: data.errorMessage.present
+          ? data.errorMessage.value
+          : this.errorMessage,
+      requestedCardCount: data.requestedCardCount.present
+          ? data.requestedCardCount.value
+          : this.requestedCardCount,
+      generatedCardCount: data.generatedCardCount.present
+          ? data.generatedCardCount.value
+          : this.generatedCardCount,
+      approvedCardCount: data.approvedCardCount.present
+          ? data.approvedCardCount.value
+          : this.approvedCardCount,
+      targetDeckId: data.targetDeckId.present
+          ? data.targetDeckId.value
+          : this.targetDeckId,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      completedAt:
+          data.completedAt.present ? data.completedAt.value : this.completedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AiProjectTableData(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('sourceType: $sourceType, ')
+          ..write('fileName: $fileName, ')
+          ..write('pdfStoragePath: $pdfStoragePath, ')
+          ..write('extractedText: $extractedText, ')
+          ..write('topic: $topic, ')
+          ..write('configJson: $configJson, ')
+          ..write('status: $status, ')
+          ..write('errorMessage: $errorMessage, ')
+          ..write('requestedCardCount: $requestedCardCount, ')
+          ..write('generatedCardCount: $generatedCardCount, ')
+          ..write('approvedCardCount: $approvedCardCount, ')
+          ..write('targetDeckId: $targetDeckId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('completedAt: $completedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      id,
+      userId,
+      sourceType,
+      fileName,
+      pdfStoragePath,
+      extractedText,
+      topic,
+      configJson,
+      status,
+      errorMessage,
+      requestedCardCount,
+      generatedCardCount,
+      approvedCardCount,
+      targetDeckId,
+      createdAt,
+      updatedAt,
+      completedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AiProjectTableData &&
+          other.id == this.id &&
+          other.userId == this.userId &&
+          other.sourceType == this.sourceType &&
+          other.fileName == this.fileName &&
+          other.pdfStoragePath == this.pdfStoragePath &&
+          other.extractedText == this.extractedText &&
+          other.topic == this.topic &&
+          other.configJson == this.configJson &&
+          other.status == this.status &&
+          other.errorMessage == this.errorMessage &&
+          other.requestedCardCount == this.requestedCardCount &&
+          other.generatedCardCount == this.generatedCardCount &&
+          other.approvedCardCount == this.approvedCardCount &&
+          other.targetDeckId == this.targetDeckId &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.completedAt == this.completedAt);
+}
+
+class AiProjectTableCompanion extends UpdateCompanion<AiProjectTableData> {
+  final Value<String> id;
+  final Value<String> userId;
+  final Value<String> sourceType;
+  final Value<String?> fileName;
+  final Value<String?> pdfStoragePath;
+  final Value<String?> extractedText;
+  final Value<String?> topic;
+  final Value<String> configJson;
+  final Value<String> status;
+  final Value<String?> errorMessage;
+  final Value<int> requestedCardCount;
+  final Value<int> generatedCardCount;
+  final Value<int> approvedCardCount;
+  final Value<String?> targetDeckId;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> completedAt;
+  final Value<int> rowid;
+  const AiProjectTableCompanion({
+    this.id = const Value.absent(),
+    this.userId = const Value.absent(),
+    this.sourceType = const Value.absent(),
+    this.fileName = const Value.absent(),
+    this.pdfStoragePath = const Value.absent(),
+    this.extractedText = const Value.absent(),
+    this.topic = const Value.absent(),
+    this.configJson = const Value.absent(),
+    this.status = const Value.absent(),
+    this.errorMessage = const Value.absent(),
+    this.requestedCardCount = const Value.absent(),
+    this.generatedCardCount = const Value.absent(),
+    this.approvedCardCount = const Value.absent(),
+    this.targetDeckId = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.completedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  AiProjectTableCompanion.insert({
+    required String id,
+    required String userId,
+    required String sourceType,
+    this.fileName = const Value.absent(),
+    this.pdfStoragePath = const Value.absent(),
+    this.extractedText = const Value.absent(),
+    this.topic = const Value.absent(),
+    this.configJson = const Value.absent(),
+    this.status = const Value.absent(),
+    this.errorMessage = const Value.absent(),
+    this.requestedCardCount = const Value.absent(),
+    this.generatedCardCount = const Value.absent(),
+    this.approvedCardCount = const Value.absent(),
+    this.targetDeckId = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.completedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        userId = Value(userId),
+        sourceType = Value(sourceType),
+        createdAt = Value(createdAt),
+        updatedAt = Value(updatedAt);
+  static Insertable<AiProjectTableData> custom({
+    Expression<String>? id,
+    Expression<String>? userId,
+    Expression<String>? sourceType,
+    Expression<String>? fileName,
+    Expression<String>? pdfStoragePath,
+    Expression<String>? extractedText,
+    Expression<String>? topic,
+    Expression<String>? configJson,
+    Expression<String>? status,
+    Expression<String>? errorMessage,
+    Expression<int>? requestedCardCount,
+    Expression<int>? generatedCardCount,
+    Expression<int>? approvedCardCount,
+    Expression<String>? targetDeckId,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? completedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (userId != null) 'user_id': userId,
+      if (sourceType != null) 'source_type': sourceType,
+      if (fileName != null) 'file_name': fileName,
+      if (pdfStoragePath != null) 'pdf_storage_path': pdfStoragePath,
+      if (extractedText != null) 'extracted_text': extractedText,
+      if (topic != null) 'topic': topic,
+      if (configJson != null) 'config_json': configJson,
+      if (status != null) 'status': status,
+      if (errorMessage != null) 'error_message': errorMessage,
+      if (requestedCardCount != null)
+        'requested_card_count': requestedCardCount,
+      if (generatedCardCount != null)
+        'generated_card_count': generatedCardCount,
+      if (approvedCardCount != null) 'approved_card_count': approvedCardCount,
+      if (targetDeckId != null) 'target_deck_id': targetDeckId,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (completedAt != null) 'completed_at': completedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  AiProjectTableCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? userId,
+      Value<String>? sourceType,
+      Value<String?>? fileName,
+      Value<String?>? pdfStoragePath,
+      Value<String?>? extractedText,
+      Value<String?>? topic,
+      Value<String>? configJson,
+      Value<String>? status,
+      Value<String?>? errorMessage,
+      Value<int>? requestedCardCount,
+      Value<int>? generatedCardCount,
+      Value<int>? approvedCardCount,
+      Value<String?>? targetDeckId,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt,
+      Value<DateTime?>? completedAt,
+      Value<int>? rowid}) {
+    return AiProjectTableCompanion(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      sourceType: sourceType ?? this.sourceType,
+      fileName: fileName ?? this.fileName,
+      pdfStoragePath: pdfStoragePath ?? this.pdfStoragePath,
+      extractedText: extractedText ?? this.extractedText,
+      topic: topic ?? this.topic,
+      configJson: configJson ?? this.configJson,
+      status: status ?? this.status,
+      errorMessage: errorMessage ?? this.errorMessage,
+      requestedCardCount: requestedCardCount ?? this.requestedCardCount,
+      generatedCardCount: generatedCardCount ?? this.generatedCardCount,
+      approvedCardCount: approvedCardCount ?? this.approvedCardCount,
+      targetDeckId: targetDeckId ?? this.targetDeckId,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      completedAt: completedAt ?? this.completedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
+    }
+    if (sourceType.present) {
+      map['source_type'] = Variable<String>(sourceType.value);
+    }
+    if (fileName.present) {
+      map['file_name'] = Variable<String>(fileName.value);
+    }
+    if (pdfStoragePath.present) {
+      map['pdf_storage_path'] = Variable<String>(pdfStoragePath.value);
+    }
+    if (extractedText.present) {
+      map['extracted_text'] = Variable<String>(extractedText.value);
+    }
+    if (topic.present) {
+      map['topic'] = Variable<String>(topic.value);
+    }
+    if (configJson.present) {
+      map['config_json'] = Variable<String>(configJson.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (errorMessage.present) {
+      map['error_message'] = Variable<String>(errorMessage.value);
+    }
+    if (requestedCardCount.present) {
+      map['requested_card_count'] = Variable<int>(requestedCardCount.value);
+    }
+    if (generatedCardCount.present) {
+      map['generated_card_count'] = Variable<int>(generatedCardCount.value);
+    }
+    if (approvedCardCount.present) {
+      map['approved_card_count'] = Variable<int>(approvedCardCount.value);
+    }
+    if (targetDeckId.present) {
+      map['target_deck_id'] = Variable<String>(targetDeckId.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (completedAt.present) {
+      map['completed_at'] = Variable<DateTime>(completedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AiProjectTableCompanion(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('sourceType: $sourceType, ')
+          ..write('fileName: $fileName, ')
+          ..write('pdfStoragePath: $pdfStoragePath, ')
+          ..write('extractedText: $extractedText, ')
+          ..write('topic: $topic, ')
+          ..write('configJson: $configJson, ')
+          ..write('status: $status, ')
+          ..write('errorMessage: $errorMessage, ')
+          ..write('requestedCardCount: $requestedCardCount, ')
+          ..write('generatedCardCount: $generatedCardCount, ')
+          ..write('approvedCardCount: $approvedCardCount, ')
+          ..write('targetDeckId: $targetDeckId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('completedAt: $completedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $AiCardDraftTableTable extends AiCardDraftTable
+    with TableInfo<$AiCardDraftTableTable, AiCardDraftTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AiCardDraftTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _projectIdMeta =
+      const VerificationMeta('projectId');
+  @override
+  late final GeneratedColumn<String> projectId = GeneratedColumn<String>(
+      'project_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _frontMeta = const VerificationMeta('front');
+  @override
+  late final GeneratedColumn<String> front = GeneratedColumn<String>(
+      'front', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _backMeta = const VerificationMeta('back');
+  @override
+  late final GeneratedColumn<String> back = GeneratedColumn<String>(
+      'back', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _hintMeta = const VerificationMeta('hint');
+  @override
+  late final GeneratedColumn<String> hint = GeneratedColumn<String>(
+      'hint', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _suggestedTagsJsonMeta =
+      const VerificationMeta('suggestedTagsJson');
+  @override
+  late final GeneratedColumn<String> suggestedTagsJson =
+      GeneratedColumn<String>('suggested_tags_json', aliasedName, false,
+          type: DriftSqlType.string,
+          requiredDuringInsert: false,
+          defaultValue: const Constant('[]'));
+  static const VerificationMeta _difficultyMeta =
+      const VerificationMeta('difficulty');
+  @override
+  late final GeneratedColumn<String> difficulty = GeneratedColumn<String>(
+      'difficulty', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('medium'));
+  static const VerificationMeta _reviewStatusMeta =
+      const VerificationMeta('reviewStatus');
+  @override
+  late final GeneratedColumn<String> reviewStatus = GeneratedColumn<String>(
+      'review_status', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('pending'));
+  static const VerificationMeta _isPotentialDuplicateMeta =
+      const VerificationMeta('isPotentialDuplicate');
+  @override
+  late final GeneratedColumn<bool> isPotentialDuplicate = GeneratedColumn<bool>(
+      'is_potential_duplicate', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_potential_duplicate" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _similarCardIdMeta =
+      const VerificationMeta('similarCardId');
+  @override
+  late final GeneratedColumn<String> similarCardId = GeneratedColumn<String>(
+      'similar_card_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _confidenceScoreMeta =
+      const VerificationMeta('confidenceScore');
+  @override
+  late final GeneratedColumn<double> confidenceScore = GeneratedColumn<double>(
+      'confidence_score', aliasedName, false,
+      type: DriftSqlType.double,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0.8));
+  static const VerificationMeta _summaryMeta =
+      const VerificationMeta('summary');
+  @override
+  late final GeneratedColumn<String> summary = GeneratedColumn<String>(
+      'summary', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _keyPhraseMeta =
+      const VerificationMeta('keyPhrase');
+  @override
+  late final GeneratedColumn<String> keyPhrase = GeneratedColumn<String>(
+      'key_phrase', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _needsReviewMeta =
+      const VerificationMeta('needsReview');
+  @override
+  late final GeneratedColumn<bool> needsReview = GeneratedColumn<bool>(
+      'needs_review', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("needs_review" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _orderIndexMeta =
+      const VerificationMeta('orderIndex');
+  @override
+  late final GeneratedColumn<int> orderIndex = GeneratedColumn<int>(
+      'order_index', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        projectId,
+        front,
+        back,
+        hint,
+        suggestedTagsJson,
+        difficulty,
+        reviewStatus,
+        isPotentialDuplicate,
+        similarCardId,
+        confidenceScore,
+        summary,
+        keyPhrase,
+        needsReview,
+        orderIndex,
+        createdAt,
+        updatedAt
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'ai_card_drafts';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<AiCardDraftTableData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('project_id')) {
+      context.handle(_projectIdMeta,
+          projectId.isAcceptableOrUnknown(data['project_id']!, _projectIdMeta));
+    } else if (isInserting) {
+      context.missing(_projectIdMeta);
+    }
+    if (data.containsKey('front')) {
+      context.handle(
+          _frontMeta, front.isAcceptableOrUnknown(data['front']!, _frontMeta));
+    } else if (isInserting) {
+      context.missing(_frontMeta);
+    }
+    if (data.containsKey('back')) {
+      context.handle(
+          _backMeta, back.isAcceptableOrUnknown(data['back']!, _backMeta));
+    } else if (isInserting) {
+      context.missing(_backMeta);
+    }
+    if (data.containsKey('hint')) {
+      context.handle(
+          _hintMeta, hint.isAcceptableOrUnknown(data['hint']!, _hintMeta));
+    }
+    if (data.containsKey('suggested_tags_json')) {
+      context.handle(
+          _suggestedTagsJsonMeta,
+          suggestedTagsJson.isAcceptableOrUnknown(
+              data['suggested_tags_json']!, _suggestedTagsJsonMeta));
+    }
+    if (data.containsKey('difficulty')) {
+      context.handle(
+          _difficultyMeta,
+          difficulty.isAcceptableOrUnknown(
+              data['difficulty']!, _difficultyMeta));
+    }
+    if (data.containsKey('review_status')) {
+      context.handle(
+          _reviewStatusMeta,
+          reviewStatus.isAcceptableOrUnknown(
+              data['review_status']!, _reviewStatusMeta));
+    }
+    if (data.containsKey('is_potential_duplicate')) {
+      context.handle(
+          _isPotentialDuplicateMeta,
+          isPotentialDuplicate.isAcceptableOrUnknown(
+              data['is_potential_duplicate']!, _isPotentialDuplicateMeta));
+    }
+    if (data.containsKey('similar_card_id')) {
+      context.handle(
+          _similarCardIdMeta,
+          similarCardId.isAcceptableOrUnknown(
+              data['similar_card_id']!, _similarCardIdMeta));
+    }
+    if (data.containsKey('confidence_score')) {
+      context.handle(
+          _confidenceScoreMeta,
+          confidenceScore.isAcceptableOrUnknown(
+              data['confidence_score']!, _confidenceScoreMeta));
+    }
+    if (data.containsKey('summary')) {
+      context.handle(_summaryMeta,
+          summary.isAcceptableOrUnknown(data['summary']!, _summaryMeta));
+    }
+    if (data.containsKey('key_phrase')) {
+      context.handle(_keyPhraseMeta,
+          keyPhrase.isAcceptableOrUnknown(data['key_phrase']!, _keyPhraseMeta));
+    }
+    if (data.containsKey('needs_review')) {
+      context.handle(
+          _needsReviewMeta,
+          needsReview.isAcceptableOrUnknown(
+              data['needs_review']!, _needsReviewMeta));
+    }
+    if (data.containsKey('order_index')) {
+      context.handle(
+          _orderIndexMeta,
+          orderIndex.isAcceptableOrUnknown(
+              data['order_index']!, _orderIndexMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  AiCardDraftTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AiCardDraftTableData(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      projectId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}project_id'])!,
+      front: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}front'])!,
+      back: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}back'])!,
+      hint: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}hint']),
+      suggestedTagsJson: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}suggested_tags_json'])!,
+      difficulty: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}difficulty'])!,
+      reviewStatus: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}review_status'])!,
+      isPotentialDuplicate: attachedDatabase.typeMapping.read(
+          DriftSqlType.bool, data['${effectivePrefix}is_potential_duplicate'])!,
+      similarCardId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}similar_card_id']),
+      confidenceScore: attachedDatabase.typeMapping.read(
+          DriftSqlType.double, data['${effectivePrefix}confidence_score'])!,
+      summary: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}summary']),
+      keyPhrase: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}key_phrase']),
+      needsReview: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}needs_review'])!,
+      orderIndex: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}order_index'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+    );
+  }
+
+  @override
+  $AiCardDraftTableTable createAlias(String alias) {
+    return $AiCardDraftTableTable(attachedDatabase, alias);
+  }
+}
+
+class AiCardDraftTableData extends DataClass
+    implements Insertable<AiCardDraftTableData> {
+  /// Unique identifier.
+  final String id;
+
+  /// ID of the parent AI project.
+  final String projectId;
+
+  /// Front side content (question).
+  final String front;
+
+  /// Back side content (answer).
+  final String back;
+
+  /// Optional hint.
+  final String? hint;
+
+  /// Tags suggested by AI as JSON array.
+  final String suggestedTagsJson;
+
+  /// Difficulty level: 'easy', 'medium', 'hard'.
+  final String difficulty;
+
+  /// Review status: 'pending', 'approved', 'edited', 'rejected'.
+  final String reviewStatus;
+
+  /// Whether this might be a duplicate of existing card.
+  final bool isPotentialDuplicate;
+
+  /// ID of similar existing card (if duplicate detected).
+  final String? similarCardId;
+
+  /// AI confidence score (0.0 to 1.0).
+  final double confidenceScore;
+
+  /// Short answer/summary (≤240 chars) - pedagogical field.
+  final String? summary;
+
+  /// Memory anchor phrase (≤120 chars) - pedagogical field.
+  final String? keyPhrase;
+
+  /// Whether this draft needs human review due to fallback applied (UC168).
+  final bool needsReview;
+
+  /// Order index for display.
+  final int orderIndex;
+
+  /// When the draft was created.
+  final DateTime createdAt;
+
+  /// When the draft was last updated.
+  final DateTime updatedAt;
+  const AiCardDraftTableData(
+      {required this.id,
+      required this.projectId,
+      required this.front,
+      required this.back,
+      this.hint,
+      required this.suggestedTagsJson,
+      required this.difficulty,
+      required this.reviewStatus,
+      required this.isPotentialDuplicate,
+      this.similarCardId,
+      required this.confidenceScore,
+      this.summary,
+      this.keyPhrase,
+      required this.needsReview,
+      required this.orderIndex,
+      required this.createdAt,
+      required this.updatedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['project_id'] = Variable<String>(projectId);
+    map['front'] = Variable<String>(front);
+    map['back'] = Variable<String>(back);
+    if (!nullToAbsent || hint != null) {
+      map['hint'] = Variable<String>(hint);
+    }
+    map['suggested_tags_json'] = Variable<String>(suggestedTagsJson);
+    map['difficulty'] = Variable<String>(difficulty);
+    map['review_status'] = Variable<String>(reviewStatus);
+    map['is_potential_duplicate'] = Variable<bool>(isPotentialDuplicate);
+    if (!nullToAbsent || similarCardId != null) {
+      map['similar_card_id'] = Variable<String>(similarCardId);
+    }
+    map['confidence_score'] = Variable<double>(confidenceScore);
+    if (!nullToAbsent || summary != null) {
+      map['summary'] = Variable<String>(summary);
+    }
+    if (!nullToAbsent || keyPhrase != null) {
+      map['key_phrase'] = Variable<String>(keyPhrase);
+    }
+    map['needs_review'] = Variable<bool>(needsReview);
+    map['order_index'] = Variable<int>(orderIndex);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  AiCardDraftTableCompanion toCompanion(bool nullToAbsent) {
+    return AiCardDraftTableCompanion(
+      id: Value(id),
+      projectId: Value(projectId),
+      front: Value(front),
+      back: Value(back),
+      hint: hint == null && nullToAbsent ? const Value.absent() : Value(hint),
+      suggestedTagsJson: Value(suggestedTagsJson),
+      difficulty: Value(difficulty),
+      reviewStatus: Value(reviewStatus),
+      isPotentialDuplicate: Value(isPotentialDuplicate),
+      similarCardId: similarCardId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(similarCardId),
+      confidenceScore: Value(confidenceScore),
+      summary: summary == null && nullToAbsent
+          ? const Value.absent()
+          : Value(summary),
+      keyPhrase: keyPhrase == null && nullToAbsent
+          ? const Value.absent()
+          : Value(keyPhrase),
+      needsReview: Value(needsReview),
+      orderIndex: Value(orderIndex),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory AiCardDraftTableData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AiCardDraftTableData(
+      id: serializer.fromJson<String>(json['id']),
+      projectId: serializer.fromJson<String>(json['projectId']),
+      front: serializer.fromJson<String>(json['front']),
+      back: serializer.fromJson<String>(json['back']),
+      hint: serializer.fromJson<String?>(json['hint']),
+      suggestedTagsJson: serializer.fromJson<String>(json['suggestedTagsJson']),
+      difficulty: serializer.fromJson<String>(json['difficulty']),
+      reviewStatus: serializer.fromJson<String>(json['reviewStatus']),
+      isPotentialDuplicate:
+          serializer.fromJson<bool>(json['isPotentialDuplicate']),
+      similarCardId: serializer.fromJson<String?>(json['similarCardId']),
+      confidenceScore: serializer.fromJson<double>(json['confidenceScore']),
+      summary: serializer.fromJson<String?>(json['summary']),
+      keyPhrase: serializer.fromJson<String?>(json['keyPhrase']),
+      needsReview: serializer.fromJson<bool>(json['needsReview']),
+      orderIndex: serializer.fromJson<int>(json['orderIndex']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'projectId': serializer.toJson<String>(projectId),
+      'front': serializer.toJson<String>(front),
+      'back': serializer.toJson<String>(back),
+      'hint': serializer.toJson<String?>(hint),
+      'suggestedTagsJson': serializer.toJson<String>(suggestedTagsJson),
+      'difficulty': serializer.toJson<String>(difficulty),
+      'reviewStatus': serializer.toJson<String>(reviewStatus),
+      'isPotentialDuplicate': serializer.toJson<bool>(isPotentialDuplicate),
+      'similarCardId': serializer.toJson<String?>(similarCardId),
+      'confidenceScore': serializer.toJson<double>(confidenceScore),
+      'summary': serializer.toJson<String?>(summary),
+      'keyPhrase': serializer.toJson<String?>(keyPhrase),
+      'needsReview': serializer.toJson<bool>(needsReview),
+      'orderIndex': serializer.toJson<int>(orderIndex),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  AiCardDraftTableData copyWith(
+          {String? id,
+          String? projectId,
+          String? front,
+          String? back,
+          Value<String?> hint = const Value.absent(),
+          String? suggestedTagsJson,
+          String? difficulty,
+          String? reviewStatus,
+          bool? isPotentialDuplicate,
+          Value<String?> similarCardId = const Value.absent(),
+          double? confidenceScore,
+          Value<String?> summary = const Value.absent(),
+          Value<String?> keyPhrase = const Value.absent(),
+          bool? needsReview,
+          int? orderIndex,
+          DateTime? createdAt,
+          DateTime? updatedAt}) =>
+      AiCardDraftTableData(
+        id: id ?? this.id,
+        projectId: projectId ?? this.projectId,
+        front: front ?? this.front,
+        back: back ?? this.back,
+        hint: hint.present ? hint.value : this.hint,
+        suggestedTagsJson: suggestedTagsJson ?? this.suggestedTagsJson,
+        difficulty: difficulty ?? this.difficulty,
+        reviewStatus: reviewStatus ?? this.reviewStatus,
+        isPotentialDuplicate: isPotentialDuplicate ?? this.isPotentialDuplicate,
+        similarCardId:
+            similarCardId.present ? similarCardId.value : this.similarCardId,
+        confidenceScore: confidenceScore ?? this.confidenceScore,
+        summary: summary.present ? summary.value : this.summary,
+        keyPhrase: keyPhrase.present ? keyPhrase.value : this.keyPhrase,
+        needsReview: needsReview ?? this.needsReview,
+        orderIndex: orderIndex ?? this.orderIndex,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+      );
+  AiCardDraftTableData copyWithCompanion(AiCardDraftTableCompanion data) {
+    return AiCardDraftTableData(
+      id: data.id.present ? data.id.value : this.id,
+      projectId: data.projectId.present ? data.projectId.value : this.projectId,
+      front: data.front.present ? data.front.value : this.front,
+      back: data.back.present ? data.back.value : this.back,
+      hint: data.hint.present ? data.hint.value : this.hint,
+      suggestedTagsJson: data.suggestedTagsJson.present
+          ? data.suggestedTagsJson.value
+          : this.suggestedTagsJson,
+      difficulty:
+          data.difficulty.present ? data.difficulty.value : this.difficulty,
+      reviewStatus: data.reviewStatus.present
+          ? data.reviewStatus.value
+          : this.reviewStatus,
+      isPotentialDuplicate: data.isPotentialDuplicate.present
+          ? data.isPotentialDuplicate.value
+          : this.isPotentialDuplicate,
+      similarCardId: data.similarCardId.present
+          ? data.similarCardId.value
+          : this.similarCardId,
+      confidenceScore: data.confidenceScore.present
+          ? data.confidenceScore.value
+          : this.confidenceScore,
+      summary: data.summary.present ? data.summary.value : this.summary,
+      keyPhrase: data.keyPhrase.present ? data.keyPhrase.value : this.keyPhrase,
+      needsReview:
+          data.needsReview.present ? data.needsReview.value : this.needsReview,
+      orderIndex:
+          data.orderIndex.present ? data.orderIndex.value : this.orderIndex,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AiCardDraftTableData(')
+          ..write('id: $id, ')
+          ..write('projectId: $projectId, ')
+          ..write('front: $front, ')
+          ..write('back: $back, ')
+          ..write('hint: $hint, ')
+          ..write('suggestedTagsJson: $suggestedTagsJson, ')
+          ..write('difficulty: $difficulty, ')
+          ..write('reviewStatus: $reviewStatus, ')
+          ..write('isPotentialDuplicate: $isPotentialDuplicate, ')
+          ..write('similarCardId: $similarCardId, ')
+          ..write('confidenceScore: $confidenceScore, ')
+          ..write('summary: $summary, ')
+          ..write('keyPhrase: $keyPhrase, ')
+          ..write('needsReview: $needsReview, ')
+          ..write('orderIndex: $orderIndex, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      id,
+      projectId,
+      front,
+      back,
+      hint,
+      suggestedTagsJson,
+      difficulty,
+      reviewStatus,
+      isPotentialDuplicate,
+      similarCardId,
+      confidenceScore,
+      summary,
+      keyPhrase,
+      needsReview,
+      orderIndex,
+      createdAt,
+      updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AiCardDraftTableData &&
+          other.id == this.id &&
+          other.projectId == this.projectId &&
+          other.front == this.front &&
+          other.back == this.back &&
+          other.hint == this.hint &&
+          other.suggestedTagsJson == this.suggestedTagsJson &&
+          other.difficulty == this.difficulty &&
+          other.reviewStatus == this.reviewStatus &&
+          other.isPotentialDuplicate == this.isPotentialDuplicate &&
+          other.similarCardId == this.similarCardId &&
+          other.confidenceScore == this.confidenceScore &&
+          other.summary == this.summary &&
+          other.keyPhrase == this.keyPhrase &&
+          other.needsReview == this.needsReview &&
+          other.orderIndex == this.orderIndex &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class AiCardDraftTableCompanion extends UpdateCompanion<AiCardDraftTableData> {
+  final Value<String> id;
+  final Value<String> projectId;
+  final Value<String> front;
+  final Value<String> back;
+  final Value<String?> hint;
+  final Value<String> suggestedTagsJson;
+  final Value<String> difficulty;
+  final Value<String> reviewStatus;
+  final Value<bool> isPotentialDuplicate;
+  final Value<String?> similarCardId;
+  final Value<double> confidenceScore;
+  final Value<String?> summary;
+  final Value<String?> keyPhrase;
+  final Value<bool> needsReview;
+  final Value<int> orderIndex;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const AiCardDraftTableCompanion({
+    this.id = const Value.absent(),
+    this.projectId = const Value.absent(),
+    this.front = const Value.absent(),
+    this.back = const Value.absent(),
+    this.hint = const Value.absent(),
+    this.suggestedTagsJson = const Value.absent(),
+    this.difficulty = const Value.absent(),
+    this.reviewStatus = const Value.absent(),
+    this.isPotentialDuplicate = const Value.absent(),
+    this.similarCardId = const Value.absent(),
+    this.confidenceScore = const Value.absent(),
+    this.summary = const Value.absent(),
+    this.keyPhrase = const Value.absent(),
+    this.needsReview = const Value.absent(),
+    this.orderIndex = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  AiCardDraftTableCompanion.insert({
+    required String id,
+    required String projectId,
+    required String front,
+    required String back,
+    this.hint = const Value.absent(),
+    this.suggestedTagsJson = const Value.absent(),
+    this.difficulty = const Value.absent(),
+    this.reviewStatus = const Value.absent(),
+    this.isPotentialDuplicate = const Value.absent(),
+    this.similarCardId = const Value.absent(),
+    this.confidenceScore = const Value.absent(),
+    this.summary = const Value.absent(),
+    this.keyPhrase = const Value.absent(),
+    this.needsReview = const Value.absent(),
+    this.orderIndex = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        projectId = Value(projectId),
+        front = Value(front),
+        back = Value(back),
+        createdAt = Value(createdAt),
+        updatedAt = Value(updatedAt);
+  static Insertable<AiCardDraftTableData> custom({
+    Expression<String>? id,
+    Expression<String>? projectId,
+    Expression<String>? front,
+    Expression<String>? back,
+    Expression<String>? hint,
+    Expression<String>? suggestedTagsJson,
+    Expression<String>? difficulty,
+    Expression<String>? reviewStatus,
+    Expression<bool>? isPotentialDuplicate,
+    Expression<String>? similarCardId,
+    Expression<double>? confidenceScore,
+    Expression<String>? summary,
+    Expression<String>? keyPhrase,
+    Expression<bool>? needsReview,
+    Expression<int>? orderIndex,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (projectId != null) 'project_id': projectId,
+      if (front != null) 'front': front,
+      if (back != null) 'back': back,
+      if (hint != null) 'hint': hint,
+      if (suggestedTagsJson != null) 'suggested_tags_json': suggestedTagsJson,
+      if (difficulty != null) 'difficulty': difficulty,
+      if (reviewStatus != null) 'review_status': reviewStatus,
+      if (isPotentialDuplicate != null)
+        'is_potential_duplicate': isPotentialDuplicate,
+      if (similarCardId != null) 'similar_card_id': similarCardId,
+      if (confidenceScore != null) 'confidence_score': confidenceScore,
+      if (summary != null) 'summary': summary,
+      if (keyPhrase != null) 'key_phrase': keyPhrase,
+      if (needsReview != null) 'needs_review': needsReview,
+      if (orderIndex != null) 'order_index': orderIndex,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  AiCardDraftTableCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? projectId,
+      Value<String>? front,
+      Value<String>? back,
+      Value<String?>? hint,
+      Value<String>? suggestedTagsJson,
+      Value<String>? difficulty,
+      Value<String>? reviewStatus,
+      Value<bool>? isPotentialDuplicate,
+      Value<String?>? similarCardId,
+      Value<double>? confidenceScore,
+      Value<String?>? summary,
+      Value<String?>? keyPhrase,
+      Value<bool>? needsReview,
+      Value<int>? orderIndex,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt,
+      Value<int>? rowid}) {
+    return AiCardDraftTableCompanion(
+      id: id ?? this.id,
+      projectId: projectId ?? this.projectId,
+      front: front ?? this.front,
+      back: back ?? this.back,
+      hint: hint ?? this.hint,
+      suggestedTagsJson: suggestedTagsJson ?? this.suggestedTagsJson,
+      difficulty: difficulty ?? this.difficulty,
+      reviewStatus: reviewStatus ?? this.reviewStatus,
+      isPotentialDuplicate: isPotentialDuplicate ?? this.isPotentialDuplicate,
+      similarCardId: similarCardId ?? this.similarCardId,
+      confidenceScore: confidenceScore ?? this.confidenceScore,
+      summary: summary ?? this.summary,
+      keyPhrase: keyPhrase ?? this.keyPhrase,
+      needsReview: needsReview ?? this.needsReview,
+      orderIndex: orderIndex ?? this.orderIndex,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (projectId.present) {
+      map['project_id'] = Variable<String>(projectId.value);
+    }
+    if (front.present) {
+      map['front'] = Variable<String>(front.value);
+    }
+    if (back.present) {
+      map['back'] = Variable<String>(back.value);
+    }
+    if (hint.present) {
+      map['hint'] = Variable<String>(hint.value);
+    }
+    if (suggestedTagsJson.present) {
+      map['suggested_tags_json'] = Variable<String>(suggestedTagsJson.value);
+    }
+    if (difficulty.present) {
+      map['difficulty'] = Variable<String>(difficulty.value);
+    }
+    if (reviewStatus.present) {
+      map['review_status'] = Variable<String>(reviewStatus.value);
+    }
+    if (isPotentialDuplicate.present) {
+      map['is_potential_duplicate'] =
+          Variable<bool>(isPotentialDuplicate.value);
+    }
+    if (similarCardId.present) {
+      map['similar_card_id'] = Variable<String>(similarCardId.value);
+    }
+    if (confidenceScore.present) {
+      map['confidence_score'] = Variable<double>(confidenceScore.value);
+    }
+    if (summary.present) {
+      map['summary'] = Variable<String>(summary.value);
+    }
+    if (keyPhrase.present) {
+      map['key_phrase'] = Variable<String>(keyPhrase.value);
+    }
+    if (needsReview.present) {
+      map['needs_review'] = Variable<bool>(needsReview.value);
+    }
+    if (orderIndex.present) {
+      map['order_index'] = Variable<int>(orderIndex.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AiCardDraftTableCompanion(')
+          ..write('id: $id, ')
+          ..write('projectId: $projectId, ')
+          ..write('front: $front, ')
+          ..write('back: $back, ')
+          ..write('hint: $hint, ')
+          ..write('suggestedTagsJson: $suggestedTagsJson, ')
+          ..write('difficulty: $difficulty, ')
+          ..write('reviewStatus: $reviewStatus, ')
+          ..write('isPotentialDuplicate: $isPotentialDuplicate, ')
+          ..write('similarCardId: $similarCardId, ')
+          ..write('confidenceScore: $confidenceScore, ')
+          ..write('summary: $summary, ')
+          ..write('keyPhrase: $keyPhrase, ')
+          ..write('needsReview: $needsReview, ')
+          ..write('orderIndex: $orderIndex, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -5332,12 +7367,16 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $CardReviewTableTable cardReviewTable =
       $CardReviewTableTable(this);
   late final $UserStatsTableTable userStatsTable = $UserStatsTableTable(this);
+  late final $AiProjectTableTable aiProjectTable = $AiProjectTableTable(this);
+  late final $AiCardDraftTableTable aiCardDraftTable =
+      $AiCardDraftTableTable(this);
   late final UserDao userDao = UserDao(this as AppDatabase);
   late final FolderDao folderDao = FolderDao(this as AppDatabase);
   late final DeckDao deckDao = DeckDao(this as AppDatabase);
   late final CardDao cardDao = CardDao(this as AppDatabase);
   late final TagDao tagDao = TagDao(this as AppDatabase);
   late final StudyDao studyDao = StudyDao(this as AppDatabase);
+  late final AiCardDao aiCardDao = AiCardDao(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -5352,7 +7391,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         studySessionTable,
         cardSrsTable,
         cardReviewTable,
-        userStatsTable
+        userStatsTable,
+        aiProjectTable,
+        aiCardDraftTable
       ];
 }
 
@@ -5869,9 +7910,16 @@ typedef $$CardTableTableCreateCompanionBuilder = CardTableCompanion Function({
   required String deckId,
   required String front,
   required String back,
+  Value<String?> summary,
+  Value<String?> keyPhrase,
   Value<String?> hint,
   Value<String?> mediaPath,
   Value<String?> mediaType,
+  Value<String?> imageUrl,
+  Value<bool> imageAsFront,
+  Value<String?> imageUploadStatus,
+  Value<String?> audioUrl,
+  Value<String?> pronunciationUrl,
   required DateTime createdAt,
   required DateTime updatedAt,
   Value<DateTime?> deletedAt,
@@ -5884,9 +7932,16 @@ typedef $$CardTableTableUpdateCompanionBuilder = CardTableCompanion Function({
   Value<String> deckId,
   Value<String> front,
   Value<String> back,
+  Value<String?> summary,
+  Value<String?> keyPhrase,
   Value<String?> hint,
   Value<String?> mediaPath,
   Value<String?> mediaType,
+  Value<String?> imageUrl,
+  Value<bool> imageAsFront,
+  Value<String?> imageUploadStatus,
+  Value<String?> audioUrl,
+  Value<String?> pronunciationUrl,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
   Value<DateTime?> deletedAt,
@@ -5916,9 +7971,16 @@ class $$CardTableTableTableManager extends RootTableManager<
             Value<String> deckId = const Value.absent(),
             Value<String> front = const Value.absent(),
             Value<String> back = const Value.absent(),
+            Value<String?> summary = const Value.absent(),
+            Value<String?> keyPhrase = const Value.absent(),
             Value<String?> hint = const Value.absent(),
             Value<String?> mediaPath = const Value.absent(),
             Value<String?> mediaType = const Value.absent(),
+            Value<String?> imageUrl = const Value.absent(),
+            Value<bool> imageAsFront = const Value.absent(),
+            Value<String?> imageUploadStatus = const Value.absent(),
+            Value<String?> audioUrl = const Value.absent(),
+            Value<String?> pronunciationUrl = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
             Value<DateTime?> deletedAt = const Value.absent(),
@@ -5931,9 +7993,16 @@ class $$CardTableTableTableManager extends RootTableManager<
             deckId: deckId,
             front: front,
             back: back,
+            summary: summary,
+            keyPhrase: keyPhrase,
             hint: hint,
             mediaPath: mediaPath,
             mediaType: mediaType,
+            imageUrl: imageUrl,
+            imageAsFront: imageAsFront,
+            imageUploadStatus: imageUploadStatus,
+            audioUrl: audioUrl,
+            pronunciationUrl: pronunciationUrl,
             createdAt: createdAt,
             updatedAt: updatedAt,
             deletedAt: deletedAt,
@@ -5946,9 +8015,16 @@ class $$CardTableTableTableManager extends RootTableManager<
             required String deckId,
             required String front,
             required String back,
+            Value<String?> summary = const Value.absent(),
+            Value<String?> keyPhrase = const Value.absent(),
             Value<String?> hint = const Value.absent(),
             Value<String?> mediaPath = const Value.absent(),
             Value<String?> mediaType = const Value.absent(),
+            Value<String?> imageUrl = const Value.absent(),
+            Value<bool> imageAsFront = const Value.absent(),
+            Value<String?> imageUploadStatus = const Value.absent(),
+            Value<String?> audioUrl = const Value.absent(),
+            Value<String?> pronunciationUrl = const Value.absent(),
             required DateTime createdAt,
             required DateTime updatedAt,
             Value<DateTime?> deletedAt = const Value.absent(),
@@ -5961,9 +8037,16 @@ class $$CardTableTableTableManager extends RootTableManager<
             deckId: deckId,
             front: front,
             back: back,
+            summary: summary,
+            keyPhrase: keyPhrase,
             hint: hint,
             mediaPath: mediaPath,
             mediaType: mediaType,
+            imageUrl: imageUrl,
+            imageAsFront: imageAsFront,
+            imageUploadStatus: imageUploadStatus,
+            audioUrl: audioUrl,
+            pronunciationUrl: pronunciationUrl,
             createdAt: createdAt,
             updatedAt: updatedAt,
             deletedAt: deletedAt,
@@ -5997,6 +8080,16 @@ class $$CardTableTableFilterComposer
       builder: (column, joinBuilders) =>
           ColumnFilters(column, joinBuilders: joinBuilders));
 
+  ColumnFilters<String> get summary => $state.composableBuilder(
+      column: $state.table.summary,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get keyPhrase => $state.composableBuilder(
+      column: $state.table.keyPhrase,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
   ColumnFilters<String> get hint => $state.composableBuilder(
       column: $state.table.hint,
       builder: (column, joinBuilders) =>
@@ -6009,6 +8102,31 @@ class $$CardTableTableFilterComposer
 
   ColumnFilters<String> get mediaType => $state.composableBuilder(
       column: $state.table.mediaType,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get imageUrl => $state.composableBuilder(
+      column: $state.table.imageUrl,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<bool> get imageAsFront => $state.composableBuilder(
+      column: $state.table.imageAsFront,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get imageUploadStatus => $state.composableBuilder(
+      column: $state.table.imageUploadStatus,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get audioUrl => $state.composableBuilder(
+      column: $state.table.audioUrl,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get pronunciationUrl => $state.composableBuilder(
+      column: $state.table.pronunciationUrl,
       builder: (column, joinBuilders) =>
           ColumnFilters(column, joinBuilders: joinBuilders));
 
@@ -6061,6 +8179,16 @@ class $$CardTableTableOrderingComposer
       builder: (column, joinBuilders) =>
           ColumnOrderings(column, joinBuilders: joinBuilders));
 
+  ColumnOrderings<String> get summary => $state.composableBuilder(
+      column: $state.table.summary,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get keyPhrase => $state.composableBuilder(
+      column: $state.table.keyPhrase,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
   ColumnOrderings<String> get hint => $state.composableBuilder(
       column: $state.table.hint,
       builder: (column, joinBuilders) =>
@@ -6073,6 +8201,31 @@ class $$CardTableTableOrderingComposer
 
   ColumnOrderings<String> get mediaType => $state.composableBuilder(
       column: $state.table.mediaType,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get imageUrl => $state.composableBuilder(
+      column: $state.table.imageUrl,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<bool> get imageAsFront => $state.composableBuilder(
+      column: $state.table.imageAsFront,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get imageUploadStatus => $state.composableBuilder(
+      column: $state.table.imageUploadStatus,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get audioUrl => $state.composableBuilder(
+      column: $state.table.audioUrl,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get pronunciationUrl => $state.composableBuilder(
+      column: $state.table.pronunciationUrl,
       builder: (column, joinBuilders) =>
           ColumnOrderings(column, joinBuilders: joinBuilders));
 
@@ -7399,6 +9552,648 @@ class $$UserStatsTableTableOrderingComposer
           ColumnOrderings(column, joinBuilders: joinBuilders));
 }
 
+typedef $$AiProjectTableTableCreateCompanionBuilder = AiProjectTableCompanion
+    Function({
+  required String id,
+  required String userId,
+  required String sourceType,
+  Value<String?> fileName,
+  Value<String?> pdfStoragePath,
+  Value<String?> extractedText,
+  Value<String?> topic,
+  Value<String> configJson,
+  Value<String> status,
+  Value<String?> errorMessage,
+  Value<int> requestedCardCount,
+  Value<int> generatedCardCount,
+  Value<int> approvedCardCount,
+  Value<String?> targetDeckId,
+  required DateTime createdAt,
+  required DateTime updatedAt,
+  Value<DateTime?> completedAt,
+  Value<int> rowid,
+});
+typedef $$AiProjectTableTableUpdateCompanionBuilder = AiProjectTableCompanion
+    Function({
+  Value<String> id,
+  Value<String> userId,
+  Value<String> sourceType,
+  Value<String?> fileName,
+  Value<String?> pdfStoragePath,
+  Value<String?> extractedText,
+  Value<String?> topic,
+  Value<String> configJson,
+  Value<String> status,
+  Value<String?> errorMessage,
+  Value<int> requestedCardCount,
+  Value<int> generatedCardCount,
+  Value<int> approvedCardCount,
+  Value<String?> targetDeckId,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<DateTime?> completedAt,
+  Value<int> rowid,
+});
+
+class $$AiProjectTableTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $AiProjectTableTable,
+    AiProjectTableData,
+    $$AiProjectTableTableFilterComposer,
+    $$AiProjectTableTableOrderingComposer,
+    $$AiProjectTableTableCreateCompanionBuilder,
+    $$AiProjectTableTableUpdateCompanionBuilder> {
+  $$AiProjectTableTableTableManager(
+      _$AppDatabase db, $AiProjectTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          filteringComposer:
+              $$AiProjectTableTableFilterComposer(ComposerState(db, table)),
+          orderingComposer:
+              $$AiProjectTableTableOrderingComposer(ComposerState(db, table)),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> userId = const Value.absent(),
+            Value<String> sourceType = const Value.absent(),
+            Value<String?> fileName = const Value.absent(),
+            Value<String?> pdfStoragePath = const Value.absent(),
+            Value<String?> extractedText = const Value.absent(),
+            Value<String?> topic = const Value.absent(),
+            Value<String> configJson = const Value.absent(),
+            Value<String> status = const Value.absent(),
+            Value<String?> errorMessage = const Value.absent(),
+            Value<int> requestedCardCount = const Value.absent(),
+            Value<int> generatedCardCount = const Value.absent(),
+            Value<int> approvedCardCount = const Value.absent(),
+            Value<String?> targetDeckId = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<DateTime?> completedAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              AiProjectTableCompanion(
+            id: id,
+            userId: userId,
+            sourceType: sourceType,
+            fileName: fileName,
+            pdfStoragePath: pdfStoragePath,
+            extractedText: extractedText,
+            topic: topic,
+            configJson: configJson,
+            status: status,
+            errorMessage: errorMessage,
+            requestedCardCount: requestedCardCount,
+            generatedCardCount: generatedCardCount,
+            approvedCardCount: approvedCardCount,
+            targetDeckId: targetDeckId,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            completedAt: completedAt,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String userId,
+            required String sourceType,
+            Value<String?> fileName = const Value.absent(),
+            Value<String?> pdfStoragePath = const Value.absent(),
+            Value<String?> extractedText = const Value.absent(),
+            Value<String?> topic = const Value.absent(),
+            Value<String> configJson = const Value.absent(),
+            Value<String> status = const Value.absent(),
+            Value<String?> errorMessage = const Value.absent(),
+            Value<int> requestedCardCount = const Value.absent(),
+            Value<int> generatedCardCount = const Value.absent(),
+            Value<int> approvedCardCount = const Value.absent(),
+            Value<String?> targetDeckId = const Value.absent(),
+            required DateTime createdAt,
+            required DateTime updatedAt,
+            Value<DateTime?> completedAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              AiProjectTableCompanion.insert(
+            id: id,
+            userId: userId,
+            sourceType: sourceType,
+            fileName: fileName,
+            pdfStoragePath: pdfStoragePath,
+            extractedText: extractedText,
+            topic: topic,
+            configJson: configJson,
+            status: status,
+            errorMessage: errorMessage,
+            requestedCardCount: requestedCardCount,
+            generatedCardCount: generatedCardCount,
+            approvedCardCount: approvedCardCount,
+            targetDeckId: targetDeckId,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            completedAt: completedAt,
+            rowid: rowid,
+          ),
+        ));
+}
+
+class $$AiProjectTableTableFilterComposer
+    extends FilterComposer<_$AppDatabase, $AiProjectTableTable> {
+  $$AiProjectTableTableFilterComposer(super.$state);
+  ColumnFilters<String> get id => $state.composableBuilder(
+      column: $state.table.id,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get userId => $state.composableBuilder(
+      column: $state.table.userId,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get sourceType => $state.composableBuilder(
+      column: $state.table.sourceType,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get fileName => $state.composableBuilder(
+      column: $state.table.fileName,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get pdfStoragePath => $state.composableBuilder(
+      column: $state.table.pdfStoragePath,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get extractedText => $state.composableBuilder(
+      column: $state.table.extractedText,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get topic => $state.composableBuilder(
+      column: $state.table.topic,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get configJson => $state.composableBuilder(
+      column: $state.table.configJson,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get status => $state.composableBuilder(
+      column: $state.table.status,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get errorMessage => $state.composableBuilder(
+      column: $state.table.errorMessage,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<int> get requestedCardCount => $state.composableBuilder(
+      column: $state.table.requestedCardCount,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<int> get generatedCardCount => $state.composableBuilder(
+      column: $state.table.generatedCardCount,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<int> get approvedCardCount => $state.composableBuilder(
+      column: $state.table.approvedCardCount,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get targetDeckId => $state.composableBuilder(
+      column: $state.table.targetDeckId,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<DateTime> get createdAt => $state.composableBuilder(
+      column: $state.table.createdAt,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<DateTime> get updatedAt => $state.composableBuilder(
+      column: $state.table.updatedAt,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<DateTime> get completedAt => $state.composableBuilder(
+      column: $state.table.completedAt,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+}
+
+class $$AiProjectTableTableOrderingComposer
+    extends OrderingComposer<_$AppDatabase, $AiProjectTableTable> {
+  $$AiProjectTableTableOrderingComposer(super.$state);
+  ColumnOrderings<String> get id => $state.composableBuilder(
+      column: $state.table.id,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get userId => $state.composableBuilder(
+      column: $state.table.userId,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get sourceType => $state.composableBuilder(
+      column: $state.table.sourceType,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get fileName => $state.composableBuilder(
+      column: $state.table.fileName,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get pdfStoragePath => $state.composableBuilder(
+      column: $state.table.pdfStoragePath,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get extractedText => $state.composableBuilder(
+      column: $state.table.extractedText,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get topic => $state.composableBuilder(
+      column: $state.table.topic,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get configJson => $state.composableBuilder(
+      column: $state.table.configJson,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get status => $state.composableBuilder(
+      column: $state.table.status,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get errorMessage => $state.composableBuilder(
+      column: $state.table.errorMessage,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<int> get requestedCardCount => $state.composableBuilder(
+      column: $state.table.requestedCardCount,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<int> get generatedCardCount => $state.composableBuilder(
+      column: $state.table.generatedCardCount,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<int> get approvedCardCount => $state.composableBuilder(
+      column: $state.table.approvedCardCount,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get targetDeckId => $state.composableBuilder(
+      column: $state.table.targetDeckId,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<DateTime> get createdAt => $state.composableBuilder(
+      column: $state.table.createdAt,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<DateTime> get updatedAt => $state.composableBuilder(
+      column: $state.table.updatedAt,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<DateTime> get completedAt => $state.composableBuilder(
+      column: $state.table.completedAt,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+}
+
+typedef $$AiCardDraftTableTableCreateCompanionBuilder
+    = AiCardDraftTableCompanion Function({
+  required String id,
+  required String projectId,
+  required String front,
+  required String back,
+  Value<String?> hint,
+  Value<String> suggestedTagsJson,
+  Value<String> difficulty,
+  Value<String> reviewStatus,
+  Value<bool> isPotentialDuplicate,
+  Value<String?> similarCardId,
+  Value<double> confidenceScore,
+  Value<String?> summary,
+  Value<String?> keyPhrase,
+  Value<bool> needsReview,
+  Value<int> orderIndex,
+  required DateTime createdAt,
+  required DateTime updatedAt,
+  Value<int> rowid,
+});
+typedef $$AiCardDraftTableTableUpdateCompanionBuilder
+    = AiCardDraftTableCompanion Function({
+  Value<String> id,
+  Value<String> projectId,
+  Value<String> front,
+  Value<String> back,
+  Value<String?> hint,
+  Value<String> suggestedTagsJson,
+  Value<String> difficulty,
+  Value<String> reviewStatus,
+  Value<bool> isPotentialDuplicate,
+  Value<String?> similarCardId,
+  Value<double> confidenceScore,
+  Value<String?> summary,
+  Value<String?> keyPhrase,
+  Value<bool> needsReview,
+  Value<int> orderIndex,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<int> rowid,
+});
+
+class $$AiCardDraftTableTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $AiCardDraftTableTable,
+    AiCardDraftTableData,
+    $$AiCardDraftTableTableFilterComposer,
+    $$AiCardDraftTableTableOrderingComposer,
+    $$AiCardDraftTableTableCreateCompanionBuilder,
+    $$AiCardDraftTableTableUpdateCompanionBuilder> {
+  $$AiCardDraftTableTableTableManager(
+      _$AppDatabase db, $AiCardDraftTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          filteringComposer:
+              $$AiCardDraftTableTableFilterComposer(ComposerState(db, table)),
+          orderingComposer:
+              $$AiCardDraftTableTableOrderingComposer(ComposerState(db, table)),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> projectId = const Value.absent(),
+            Value<String> front = const Value.absent(),
+            Value<String> back = const Value.absent(),
+            Value<String?> hint = const Value.absent(),
+            Value<String> suggestedTagsJson = const Value.absent(),
+            Value<String> difficulty = const Value.absent(),
+            Value<String> reviewStatus = const Value.absent(),
+            Value<bool> isPotentialDuplicate = const Value.absent(),
+            Value<String?> similarCardId = const Value.absent(),
+            Value<double> confidenceScore = const Value.absent(),
+            Value<String?> summary = const Value.absent(),
+            Value<String?> keyPhrase = const Value.absent(),
+            Value<bool> needsReview = const Value.absent(),
+            Value<int> orderIndex = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              AiCardDraftTableCompanion(
+            id: id,
+            projectId: projectId,
+            front: front,
+            back: back,
+            hint: hint,
+            suggestedTagsJson: suggestedTagsJson,
+            difficulty: difficulty,
+            reviewStatus: reviewStatus,
+            isPotentialDuplicate: isPotentialDuplicate,
+            similarCardId: similarCardId,
+            confidenceScore: confidenceScore,
+            summary: summary,
+            keyPhrase: keyPhrase,
+            needsReview: needsReview,
+            orderIndex: orderIndex,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String projectId,
+            required String front,
+            required String back,
+            Value<String?> hint = const Value.absent(),
+            Value<String> suggestedTagsJson = const Value.absent(),
+            Value<String> difficulty = const Value.absent(),
+            Value<String> reviewStatus = const Value.absent(),
+            Value<bool> isPotentialDuplicate = const Value.absent(),
+            Value<String?> similarCardId = const Value.absent(),
+            Value<double> confidenceScore = const Value.absent(),
+            Value<String?> summary = const Value.absent(),
+            Value<String?> keyPhrase = const Value.absent(),
+            Value<bool> needsReview = const Value.absent(),
+            Value<int> orderIndex = const Value.absent(),
+            required DateTime createdAt,
+            required DateTime updatedAt,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              AiCardDraftTableCompanion.insert(
+            id: id,
+            projectId: projectId,
+            front: front,
+            back: back,
+            hint: hint,
+            suggestedTagsJson: suggestedTagsJson,
+            difficulty: difficulty,
+            reviewStatus: reviewStatus,
+            isPotentialDuplicate: isPotentialDuplicate,
+            similarCardId: similarCardId,
+            confidenceScore: confidenceScore,
+            summary: summary,
+            keyPhrase: keyPhrase,
+            needsReview: needsReview,
+            orderIndex: orderIndex,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            rowid: rowid,
+          ),
+        ));
+}
+
+class $$AiCardDraftTableTableFilterComposer
+    extends FilterComposer<_$AppDatabase, $AiCardDraftTableTable> {
+  $$AiCardDraftTableTableFilterComposer(super.$state);
+  ColumnFilters<String> get id => $state.composableBuilder(
+      column: $state.table.id,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get projectId => $state.composableBuilder(
+      column: $state.table.projectId,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get front => $state.composableBuilder(
+      column: $state.table.front,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get back => $state.composableBuilder(
+      column: $state.table.back,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get hint => $state.composableBuilder(
+      column: $state.table.hint,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get suggestedTagsJson => $state.composableBuilder(
+      column: $state.table.suggestedTagsJson,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get difficulty => $state.composableBuilder(
+      column: $state.table.difficulty,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get reviewStatus => $state.composableBuilder(
+      column: $state.table.reviewStatus,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<bool> get isPotentialDuplicate => $state.composableBuilder(
+      column: $state.table.isPotentialDuplicate,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get similarCardId => $state.composableBuilder(
+      column: $state.table.similarCardId,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<double> get confidenceScore => $state.composableBuilder(
+      column: $state.table.confidenceScore,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get summary => $state.composableBuilder(
+      column: $state.table.summary,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get keyPhrase => $state.composableBuilder(
+      column: $state.table.keyPhrase,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<bool> get needsReview => $state.composableBuilder(
+      column: $state.table.needsReview,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<int> get orderIndex => $state.composableBuilder(
+      column: $state.table.orderIndex,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<DateTime> get createdAt => $state.composableBuilder(
+      column: $state.table.createdAt,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<DateTime> get updatedAt => $state.composableBuilder(
+      column: $state.table.updatedAt,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+}
+
+class $$AiCardDraftTableTableOrderingComposer
+    extends OrderingComposer<_$AppDatabase, $AiCardDraftTableTable> {
+  $$AiCardDraftTableTableOrderingComposer(super.$state);
+  ColumnOrderings<String> get id => $state.composableBuilder(
+      column: $state.table.id,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get projectId => $state.composableBuilder(
+      column: $state.table.projectId,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get front => $state.composableBuilder(
+      column: $state.table.front,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get back => $state.composableBuilder(
+      column: $state.table.back,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get hint => $state.composableBuilder(
+      column: $state.table.hint,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get suggestedTagsJson => $state.composableBuilder(
+      column: $state.table.suggestedTagsJson,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get difficulty => $state.composableBuilder(
+      column: $state.table.difficulty,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get reviewStatus => $state.composableBuilder(
+      column: $state.table.reviewStatus,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<bool> get isPotentialDuplicate => $state.composableBuilder(
+      column: $state.table.isPotentialDuplicate,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get similarCardId => $state.composableBuilder(
+      column: $state.table.similarCardId,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<double> get confidenceScore => $state.composableBuilder(
+      column: $state.table.confidenceScore,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get summary => $state.composableBuilder(
+      column: $state.table.summary,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get keyPhrase => $state.composableBuilder(
+      column: $state.table.keyPhrase,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<bool> get needsReview => $state.composableBuilder(
+      column: $state.table.needsReview,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<int> get orderIndex => $state.composableBuilder(
+      column: $state.table.orderIndex,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<DateTime> get createdAt => $state.composableBuilder(
+      column: $state.table.createdAt,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<DateTime> get updatedAt => $state.composableBuilder(
+      column: $state.table.updatedAt,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+}
+
 class $AppDatabaseManager {
   final _$AppDatabase _db;
   $AppDatabaseManager(this._db);
@@ -7422,4 +10217,8 @@ class $AppDatabaseManager {
       $$CardReviewTableTableTableManager(_db, _db.cardReviewTable);
   $$UserStatsTableTableTableManager get userStatsTable =>
       $$UserStatsTableTableTableManager(_db, _db.userStatsTable);
+  $$AiProjectTableTableTableManager get aiProjectTable =>
+      $$AiProjectTableTableTableManager(_db, _db.aiProjectTable);
+  $$AiCardDraftTableTableTableManager get aiCardDraftTable =>
+      $$AiCardDraftTableTableTableManager(_db, _db.aiCardDraftTable);
 }

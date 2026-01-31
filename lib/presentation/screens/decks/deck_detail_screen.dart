@@ -1,3 +1,5 @@
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -144,8 +146,19 @@ class DeckDetailScreen extends ConsumerWidget {
             );
           }
 
+          // Check for legacy cards (UC172)
+          final legacyCardCount = cards.where((c) => c.needsMigration).length;
+
           return Column(
             children: [
+              // Legacy cards banner (UC172)
+              if (legacyCardCount > 0)
+                _LegacyCardsBanner(
+                  legacyCount: legacyCardCount,
+                  totalCount: cards.length,
+                  deckId: deckId,
+                ),
+
               // Study button header
               _StudyHeader(deckId: deckId, cardCount: cards.length),
 
@@ -230,6 +243,66 @@ class DeckDetailScreen extends ConsumerWidget {
         context.showErrorSnackBar(e.toString().replaceFirst('Exception: ', ''));
       }
     }
+  }
+}
+
+/// Banner showing legacy cards that need migration (UC172).
+class _LegacyCardsBanner extends StatelessWidget {
+  final int legacyCount;
+  final int totalCount;
+  final String deckId;
+
+  const _LegacyCardsBanner({
+    required this.legacyCount,
+    required this.totalCount,
+    required this.deckId,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.orange.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.orange.shade200),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.warning_amber_rounded,
+            color: Colors.orange.shade700,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '$legacyCount card${legacyCount > 1 ? 's' : ''} para migrar',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.orange.shade900,
+                  ),
+                ),
+                Text(
+                  'Adicione resumo e frase-chave',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.orange.shade800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          TextButton(
+            onPressed: () => context.push('${AppRoutes.cardMigration}/$deckId'),
+            child: const Text('Migrar'),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -618,84 +691,173 @@ class _CardTile extends ConsumerWidget {
         onTap: () => context.push('${AppRoutes.cardForm}?deckId=$deckId&id=${card.id}'),
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: Column(
+          child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      card.front,
-                      style: context.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
+              // Image thumbnail (if card has image)
+              if (card.hasImage) ...[
+                _buildImageThumbnail(context),
+                const SizedBox(width: 12),
+              ],
+              // Card content
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Row(
+                            children: [
+                              // Image indicator if imageAsFront
+                              if (card.hasImage && card.imageAsFront) ...[
+                                Icon(
+                                  Icons.image,
+                                  size: 16,
+                                  color: context.colorScheme.primary,
+                                ),
+                                const SizedBox(width: 4),
+                              ],
+                              Expanded(
+                                child: Text(
+                                  card.front,
+                                  style: context.textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        PopupMenuButton<String>(
+                          onSelected: (value) => _handleCardMenu(context, ref, value),
+                          itemBuilder: (context) => [
+                            const PopupMenuItem(
+                              value: 'edit',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.edit_outlined),
+                                  SizedBox(width: 8),
+                                  Text('Editar'),
+                                ],
+                              ),
+                            ),
+                            const PopupMenuItem(
+                              value: 'mastered',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.check_circle_outline),
+                                  SizedBox(width: 8),
+                                  Text('Marcar dominado'),
+                                ],
+                              ),
+                            ),
+                            const PopupMenuItem(
+                              value: 'reset',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.restart_alt),
+                                  SizedBox(width: 8),
+                                  Text('Resetar progresso'),
+                                ],
+                              ),
+                            ),
+                            const PopupMenuItem(
+                              value: 'delete',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.delete_outlined),
+                                  SizedBox(width: 8),
+                                  Text('Excluir'),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      card.back,
+                      style: context.textTheme.bodyMedium?.copyWith(
+                        color: context.colorScheme.onSurfaceVariant,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                  PopupMenuButton<String>(
-                    onSelected: (value) => _handleCardMenu(context, ref, value),
-                    itemBuilder: (context) => [
-                      const PopupMenuItem(
-                        value: 'edit',
-                        child: Row(
-                          children: [
-                            Icon(Icons.edit_outlined),
-                            SizedBox(width: 8),
-                            Text('Editar'),
-                          ],
-                        ),
-                      ),
-                      const PopupMenuItem(
-                        value: 'mastered',
-                        child: Row(
-                          children: [
-                            Icon(Icons.check_circle_outline),
-                            SizedBox(width: 8),
-                            Text('Marcar dominado'),
-                          ],
-                        ),
-                      ),
-                      const PopupMenuItem(
-                        value: 'reset',
-                        child: Row(
-                          children: [
-                            Icon(Icons.restart_alt),
-                            SizedBox(width: 8),
-                            Text('Resetar progresso'),
-                          ],
-                        ),
-                      ),
-                      const PopupMenuItem(
-                        value: 'delete',
-                        child: Row(
-                          children: [
-                            Icon(Icons.delete_outlined),
-                            SizedBox(width: 8),
-                            Text('Excluir'),
-                          ],
-                        ),
-                      ),
+                    if (card.hasTags) ...[
+                      const SizedBox(height: 8),
+                      _buildTagChips(context, ref),
                     ],
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                card.back,
-                style: context.textTheme.bodyMedium?.copyWith(
-                  color: context.colorScheme.onSurfaceVariant,
+                  ],
                 ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
               ),
-              if (card.hasTags) ...[
-                const SizedBox(height: 8),
-                _buildTagChips(context, ref),
-              ],
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildImageThumbnail(BuildContext context) {
+    final imageUrl = card.displayImageUrl;
+    if (imageUrl == null) return const SizedBox.shrink();
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: SizedBox(
+        width: 56,
+        height: 56,
+        child: kIsWeb
+            ? Image.network(
+                imageUrl,
+                fit: BoxFit.cover,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Container(
+                    color: context.colorScheme.surfaceContainerHighest,
+                    child: const Center(
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    ),
+                  );
+                },
+                errorBuilder: (context, error, stackTrace) => Container(
+                  color: context.colorScheme.errorContainer,
+                  child: Icon(
+                    Icons.broken_image_outlined,
+                    size: 24,
+                    color: context.colorScheme.onErrorContainer,
+                  ),
+                ),
+              )
+            : CachedNetworkImage(
+                imageUrl: imageUrl,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => Container(
+                  color: context.colorScheme.surfaceContainerHighest,
+                  child: const Center(
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ),
+                ),
+                errorWidget: (context, url, error) => Container(
+                  color: context.colorScheme.errorContainer,
+                  child: Icon(
+                    Icons.broken_image_outlined,
+                    size: 24,
+                    color: context.colorScheme.onErrorContainer,
+                  ),
+                ),
+              ),
       ),
     );
   }

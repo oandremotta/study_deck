@@ -113,11 +113,16 @@ class CardRepositoryImpl implements CardRepository {
     required String deckId,
     required String front,
     required String back,
+    String? summary,
+    String? keyPhrase,
     String? hint,
     List<String> tagIds = const [],
+    String? imageUrl,
+    bool imageAsFront = false,
   }) async {
     try {
-      if (front.trim().isEmpty) {
+      // If image is front, text can be empty
+      if (!imageAsFront && front.trim().isEmpty) {
         return Left(ValidationFailure.empty('Card front'));
       }
       if (back.trim().isEmpty) {
@@ -129,8 +134,12 @@ class CardRepositoryImpl implements CardRepository {
         deckId: deckId,
         front: front.trim(),
         back: back.trim(),
+        summary: summary?.trim(),
+        keyPhrase: keyPhrase?.trim(),
         hint: hint?.trim(),
         tagIds: tagIds,
+        imageUrl: imageUrl,
+        imageAsFront: imageAsFront,
       );
 
       await _database.cardDao.createCard(card.toCompanion());
@@ -184,8 +193,12 @@ class CardRepositoryImpl implements CardRepository {
     required String id,
     String? front,
     String? back,
+    String? summary,
+    String? keyPhrase,
     String? hint,
     List<String>? tagIds,
+    String? imageUrl,
+    bool? imageAsFront,
   }) async {
     try {
       final existingCard = await _database.cardDao.getCardById(id);
@@ -198,8 +211,12 @@ class CardRepositoryImpl implements CardRepository {
 
       final newFront = front?.trim() ?? existingCard.front;
       final newBack = back?.trim() ?? existingCard.back;
+      final newSummary = summary?.trim() ?? existingCard.summary;
+      final newKeyPhrase = keyPhrase?.trim() ?? existingCard.keyPhrase;
+      final newImageAsFront = imageAsFront ?? existingCard.imageAsFront;
 
-      if (newFront.isEmpty) {
+      // If image is front, text can be empty
+      if (!newImageAsFront && newFront.isEmpty) {
         return Left(ValidationFailure.empty('Card front'));
       }
       if (newBack.isEmpty) {
@@ -212,9 +229,14 @@ class CardRepositoryImpl implements CardRepository {
         deckId: Value(existingCard.deckId),
         front: Value(newFront),
         back: Value(newBack),
+        summary: Value(newSummary),
+        keyPhrase: Value(newKeyPhrase),
         hint: Value(hint?.trim() ?? existingCard.hint),
         mediaPath: Value(existingCard.mediaPath),
         mediaType: Value(existingCard.mediaType),
+        imageUrl: Value(imageUrl ?? existingCard.imageUrl),
+        imageAsFront: Value(newImageAsFront),
+        imageUploadStatus: Value(existingCard.imageUploadStatus),
         createdAt: Value(existingCard.createdAt),
         updatedAt: Value(now),
         deletedAt: Value(existingCard.deletedAt),
@@ -235,9 +257,14 @@ class CardRepositoryImpl implements CardRepository {
         deckId: existingCard.deckId,
         front: newFront,
         back: newBack,
+        summary: newSummary,
+        keyPhrase: newKeyPhrase,
         hint: hint?.trim() ?? existingCard.hint,
         mediaPath: existingCard.mediaPath,
         mediaType: existingCard.mediaType,
+        imageUrl: imageUrl ?? existingCard.imageUrl,
+        imageAsFront: newImageAsFront,
+        imageUploadStatus: existingCard.imageUploadStatus,
         createdAt: existingCard.createdAt,
         updatedAt: now,
         deletedAt: existingCard.deletedAt,

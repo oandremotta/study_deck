@@ -4,11 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/extensions/context_extensions.dart';
+import '../../../domain/entities/subscription.dart';
 import '../../../domain/entities/user_stats.dart';
 import '../../providers/app_preferences_provider.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/home_providers.dart';
 import '../../providers/study_providers.dart';
+import '../../providers/subscription_providers.dart';
 import '../../router/app_router.dart';
 
 /// Main home screen with improved UX (EP10-EP16, UC65, UC66).
@@ -179,6 +181,10 @@ class _HomeBody extends StatelessWidget {
 
         const SizedBox(height: 16),
 
+        // UC201: Plan status shortcut (compact)
+        const _PlanStatusCard(),
+        const SizedBox(height: 16),
+
         // Quick actions (2x2 grid)
         _QuickActionsSection(),
       ],
@@ -223,6 +229,10 @@ class _HomeBody extends StatelessWidget {
           _AnonymousWarning(),
           const SizedBox(height: 20),
         ],
+
+        // UC201: Plan status shortcut
+        const _PlanStatusCard(),
+        const SizedBox(height: 20),
 
         // Quick actions
         _QuickActionsSection(),
@@ -1098,7 +1108,151 @@ class _QuickActionsSection extends StatelessWidget {
             ),
           ],
         ),
+        const SizedBox(height: 12),
+        // AI Cards generation button
+        _AiCardsCard(),
       ],
+    );
+  }
+}
+
+/// UC202, UC207: AI Cards generation card with credit status and limit badge.
+class _AiCardsCard extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // TODO: Get actual userId from auth
+    const userId = 'user_id';
+    final subscriptionAsync = ref.watch(userSubscriptionProvider(userId));
+
+    return subscriptionAsync.when(
+      data: (subscription) => _buildCard(context, subscription),
+      loading: () => _buildCard(context, null),
+      error: (_, __) => _buildCard(context, null),
+    );
+  }
+
+  Widget _buildCard(BuildContext context, UserSubscription? subscription) {
+    final credits = subscription?.totalAiCredits ?? 0;
+    final hasCredits = credits > 0;
+
+    return Card(
+      color: hasCredits
+          ? context.colorScheme.tertiaryContainer
+          : context.colorScheme.surfaceContainerHighest,
+      child: InkWell(
+        onTap: () => context.push(AppRoutes.aiCardsHub),
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              // Icon with optional lock overlay
+              Stack(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: hasCredits
+                          ? context.colorScheme.tertiary.withValues(alpha: 0.15)
+                          : context.colorScheme.outline.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.auto_awesome,
+                      size: 28,
+                      color: hasCredits
+                          ? context.colorScheme.tertiary
+                          : context.colorScheme.outline,
+                    ),
+                  ),
+                  // UC202: Lock badge when no credits
+                  if (!hasCredits)
+                    Positioned(
+                      right: 0,
+                      bottom: 0,
+                      child: Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          color: context.colorScheme.error,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.lock,
+                          size: 12,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          'Gerar Cards com IA',
+                          style: context.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: hasCredits
+                                ? context.colorScheme.onTertiaryContainer
+                                : context.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        // UC202: Badge when no credits
+                        if (!hasCredits) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: context.colorScheme.error,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              'Sem creditos',
+                              style: context.textTheme.labelSmall?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 9,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    // Show credit count or upgrade message
+                    Text(
+                      hasCredits
+                          ? '$credits credito${credits == 1 ? '' : 's'} disponivel'
+                          : 'Assista anuncio ou faca upgrade',
+                      style: context.textTheme.bodySmall?.copyWith(
+                        color: hasCredits
+                            ? context.colorScheme.onTertiaryContainer
+                                .withValues(alpha: 0.8)
+                            : context.colorScheme.error,
+                        fontWeight: hasCredits ? null : FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios,
+                size: 16,
+                color: hasCredits
+                    ? context.colorScheme.onTertiaryContainer
+                    : context.colorScheme.outline,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -1134,6 +1288,125 @@ class _ActionCard extends StatelessWidget {
                 label,
                 style: Theme.of(context).textTheme.titleSmall,
               ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// UC201: Plan status card showing subscription and AI credits.
+class _PlanStatusCard extends ConsumerWidget {
+  const _PlanStatusCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // TODO: Get actual userId from auth
+    const userId = 'user_id';
+    final subscriptionAsync = ref.watch(userSubscriptionProvider(userId));
+
+    return subscriptionAsync.when(
+      data: (subscription) => _buildCard(context, subscription),
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+
+  Widget _buildCard(BuildContext context, UserSubscription subscription) {
+    final isPremium = subscription.isPremium;
+    final credits = subscription.totalAiCredits;
+
+    return Card(
+      color: isPremium
+          ? context.colorScheme.primaryContainer
+          : context.colorScheme.surfaceContainerHighest,
+      child: InkWell(
+        onTap: () => context.push(AppRoutes.subscriptionSettings),
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              // Plan badge
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: isPremium
+                      ? context.colorScheme.primary
+                      : context.colorScheme.outline.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      isPremium ? Icons.workspace_premium : Icons.person,
+                      size: 16,
+                      color: isPremium
+                          ? Colors.white
+                          : context.colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      isPremium ? 'Premium' : 'Gratuito',
+                      style: context.textTheme.labelMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: isPremium
+                            ? Colors.white
+                            : context.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              // AI Credits
+              Expanded(
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.auto_awesome,
+                      size: 16,
+                      color: credits > 0
+                          ? context.colorScheme.tertiary
+                          : context.colorScheme.error,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '$credits creditos IA',
+                      style: context.textTheme.bodySmall?.copyWith(
+                        color: credits > 0
+                            ? context.colorScheme.onSurfaceVariant
+                            : context.colorScheme.error,
+                        fontWeight: credits == 0 ? FontWeight.bold : null,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // CTA for free users
+              if (!isPremium)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: context.colorScheme.primary,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    'Upgrade',
+                    style: context.textTheme.labelSmall?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                )
+              else
+                Icon(
+                  Icons.chevron_right,
+                  size: 20,
+                  color: context.colorScheme.onPrimaryContainer,
+                ),
             ],
           ),
         ),

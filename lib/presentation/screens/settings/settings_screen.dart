@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/extensions/context_extensions.dart';
+import '../../router/app_router.dart';
 
 /// Keys for notification settings in SharedPreferences.
 class NotificationSettings {
@@ -173,6 +175,49 @@ class SettingsScreen extends ConsumerWidget {
                     },
                   ),
                 ],
+                const Divider(height: 32),
+
+                // Preferences Section
+                _SectionHeader(title: 'Preferências'),
+                ListTile(
+                  title: const Text('Idioma'),
+                  subtitle: const Text('Idioma do app e conteúdo IA'),
+                  leading: const Icon(Icons.language),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.push(AppRoutes.settingsLanguage),
+                ),
+                ListTile(
+                  title: const Text('Acessibilidade'),
+                  subtitle: const Text('Tamanho de texto, contraste, animações'),
+                  leading: const Icon(Icons.accessibility),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.push(AppRoutes.settingsAccessibility),
+                ),
+                const Divider(height: 32),
+
+                // Account Section
+                _SectionHeader(title: 'Conta'),
+                ListTile(
+                  title: const Text('Assinatura'),
+                  subtitle: const Text('Gerenciar plano e créditos IA'),
+                  leading: const Icon(Icons.workspace_premium),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.push(AppRoutes.subscriptionSettings),
+                ),
+                ListTile(
+                  title: const Text('Backup e Sincronização'),
+                  subtitle: const Text('Fazer backup e restaurar dados'),
+                  leading: const Icon(Icons.backup),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.push(AppRoutes.backupManagement),
+                ),
+                ListTile(
+                  title: const Text('Privacidade'),
+                  subtitle: const Text('Consentimentos e dados pessoais'),
+                  leading: const Icon(Icons.privacy_tip),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.push(AppRoutes.privacySettings),
+                ),
                 const Divider(height: 32),
 
                 // Info Section

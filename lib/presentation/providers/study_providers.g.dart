@@ -420,7 +420,7 @@ class _StudyQueueProviderElement
   int? get limit => (origin as StudyQueueProvider).limit;
 }
 
-String _$studyNotifierHash() => r'f0eb8a1e03025aa1e0dede7c6b090086cae6929b';
+String _$studyNotifierHash() => r'0d9535eb3f532c38c3c9a8f38905098cec1c20ca';
 
 /// Notifier for managing study sessions.
 /// Uses keepAlive to preserve session state during navigation.

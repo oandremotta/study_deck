@@ -14,7 +14,21 @@
       "Bash(flutter analyze:*)",
       "Bash(flutter clean:*)",
       "Bash(flutter build:*)",
-      "Bash(/c/dev/flutter/bin/flutter.bat analyze:*)"
+      "Bash(/c/dev/flutter/bin/flutter.bat analyze:*)",
+      "Bash(\"/c/Program Files/nodejs/firebase\" deploy --only hosting)",
+      "Bash(flutter devices:*)",
+      "Bash(node -e \"const {execSync} = require\\(''child_process''\\); try { console.log\\(execSync\\(''flutter devices''\\).toString\\(\\)\\); } catch\\(e\\) { console.log\\(e.stdout?.toString\\(\\)\\); console.log\\(e.stderr?.toString\\(\\)\\); }\")",
+      "Bash(node -e \"const {execSync} = require\\(''child_process''\\); try { console.log\\(execSync\\(''flutter build web --release'', {stdio: ''pipe''}\\).toString\\(\\)\\); } catch\\(e\\) { console.log\\(''stdout:'', e.stdout?.toString\\(\\)\\); console.log\\(''stderr:'', e.stderr?.toString\\(\\)\\); console.log\\(''status:'', e.status\\); }\")",
+      "Bash(node -e \"const {execSync} = require\\(''child_process''\\); try { console.log\\(execSync\\(''firebase deploy --only hosting'', {stdio: ''pipe''}\\).toString\\(\\)\\); } catch\\(e\\) { console.log\\(''stdout:'', e.stdout?.toString\\(\\)\\); console.log\\(''stderr:'', e.stderr?.toString\\(\\)\\); console.log\\(''status:'', e.status\\); }\")",
+      "Bash(gsutil cors set:*)",
+      "Bash(gsutil cors get:*)",
+      "Bash(gcloud storage buckets update:*)",
+      "Bash(grep:*)",
+      "Bash(EXIT_CODE=$?)",
+      "Bash(if [ -f build_output.txt ])",
+      "Bash(then cat build_output.txt)",
+      "Bash(fi)",
+      "WebFetch(domain:pub.dev)"
     ]
   }
 }

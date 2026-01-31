@@ -23,15 +23,21 @@ abstract class CardRepository {
   /// Gets a single card by ID.
   Future<Either<Failure, Card?>> getCardById(String id);
 
-  /// Creates a new card (quick mode).
+  /// Creates a new card with pedagogical format.
   ///
   /// UC10 - Create card (quick mode).
+  /// UC115 - Add image to card.
+  /// UC173 - Create card with pedagogical fields.
   Future<Either<Failure, Card>> createCard({
     required String deckId,
     required String front,
     required String back,
+    String? summary,
+    String? keyPhrase,
     String? hint,
     List<String> tagIds,
+    String? imageUrl,
+    bool imageAsFront = false,
   });
 
   /// Creates multiple cards at once (batch import).
@@ -40,12 +46,18 @@ abstract class CardRepository {
   /// Updates an existing card.
   ///
   /// UC11 - Edit card.
+  /// UC115/UC116 - Add/Remove image from card.
+  /// UC173 - Update card with pedagogical fields.
   Future<Either<Failure, Card>> updateCard({
     required String id,
     String? front,
     String? back,
+    String? summary,
+    String? keyPhrase,
     String? hint,
     List<String>? tagIds,
+    String? imageUrl,
+    bool? imageAsFront,
   });
 
   /// Soft deletes a card (moves to trash).

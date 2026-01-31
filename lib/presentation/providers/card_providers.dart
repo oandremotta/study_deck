@@ -324,15 +324,23 @@ Future<Card> createCardDirect(
   required String deckId,
   required String front,
   required String back,
+  String? summary,
+  String? keyPhrase,
   String? hint,
   List<String> tagIds = const [],
+  String? imageUrl,
+  bool imageAsFront = false,
 }) async {
   final result = await repository.createCard(
     deckId: deckId,
     front: front,
     back: back,
+    summary: summary,
+    keyPhrase: keyPhrase,
     hint: hint,
     tagIds: tagIds,
+    imageUrl: imageUrl,
+    imageAsFront: imageAsFront,
   );
   return result.fold(
     (failure) => throw Exception(failure.message),
@@ -346,15 +354,23 @@ Future<Card> updateCardDirect(
   required String id,
   String? front,
   String? back,
+  String? summary,
+  String? keyPhrase,
   String? hint,
   List<String>? tagIds,
+  String? imageUrl,
+  bool? imageAsFront,
 }) async {
   final result = await repository.updateCard(
     id: id,
     front: front,
     back: back,
+    summary: summary,
+    keyPhrase: keyPhrase,
     hint: hint,
     tagIds: tagIds,
+    imageUrl: imageUrl,
+    imageAsFront: imageAsFront,
   );
   return result.fold(
     (failure) => throw Exception(failure.message),

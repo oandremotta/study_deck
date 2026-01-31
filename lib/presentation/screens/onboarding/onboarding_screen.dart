@@ -31,11 +31,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             children: [
               const Spacer(),
 
-              // App icon/logo placeholder
-              Icon(
-                Icons.school_rounded,
-                size: 120,
-                color: context.colorScheme.primary,
+              // App logo
+              Image.asset(
+                'assets/images/logo.png',
+                width: 120,
+                height: 120,
               ),
               const SizedBox(height: 24),
 
