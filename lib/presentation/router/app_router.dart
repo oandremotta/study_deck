@@ -27,6 +27,7 @@ import '../screens/settings/language_settings_screen.dart';
 import '../screens/ai_cards/ai_cards_hub_screen.dart';
 import '../screens/ai_cards/create_from_text_screen.dart';
 import '../screens/ai_cards/create_from_pdf_screen.dart';
+import '../screens/ai_cards/create_from_topic_screen.dart';
 import '../screens/ai_cards/generation_config_screen.dart';
 import '../screens/ai_cards/generation_progress_screen.dart';
 import '../screens/ai_cards/review_drafts_screen.dart';
@@ -306,6 +307,11 @@ GoRouter appRouter(Ref ref) {
         path: AppRoutes.aiFromPdf,
         name: 'aiFromPdf',
         builder: (context, state) => const CreateFromPdfScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.aiFromTopic,
+        name: 'aiFromTopic',
+        builder: (context, state) => const CreateFromTopicScreen(),
       ),
       GoRoute(
         path: '${AppRoutes.aiConfig}/:projectId',

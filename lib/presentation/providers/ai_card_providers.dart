@@ -3,7 +3,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../data/repositories/ai_card_repository_impl.dart';
 import '../../data/services/ai_generation_service.dart';
-import '../../data/services/gemini_generation_service.dart';
+import '../../data/services/gemini_proxy_service.dart';
 import '../../data/services/openai_generation_service.dart';
 import '../../data/services/pdf_service.dart';
 import '../../domain/entities/ai_project.dart';
@@ -16,8 +16,9 @@ part 'ai_card_providers.g.dart';
 
 // ============ Configuration ============
 
-/// Default Gemini API key (app-provided).
-const String _defaultGeminiApiKey = 'AIzaSyCYLb62v2vvkeNNMavGj5OZISyv6KCMRLA';
+/// Firebase Function URL for secure Gemini API access.
+const String _geminiProxyUrl =
+    'https://us-central1-studydeck-78bde.cloudfunctions.net/generateWithGemini';
 
 // ============ Repository Provider ============
 
@@ -43,53 +44,49 @@ PdfService pdfService(Ref ref) {
 
 /// Provider for AI generation configuration (synchronous).
 ///
-/// Uses the app-provided Gemini API key by default.
-/// NOTE: This is synchronous since the config is a constant.
+/// Uses Firebase Functions proxy for Gemini (secure, no API key in client).
 final aiConfigProvider = Provider<AiConfig>((ref) {
   return const AiConfig(
     provider: AiProvider.gemini,
-    geminiApiKey: _defaultGeminiApiKey,
+    geminiProxyUrl: _geminiProxyUrl,
   );
 });
 
 /// Configuration for AI generation.
 class AiConfig {
   final AiProvider provider;
-  final String? geminiApiKey;
+  final String? geminiProxyUrl;
   final String? openaiApiKey;
 
   const AiConfig({
     this.provider = AiProvider.gemini,
-    this.geminiApiKey,
+    this.geminiProxyUrl,
     this.openaiApiKey,
   });
 
-  /// Returns the API key for the current provider.
-  String? get currentApiKey {
+  /// Returns true if the current provider is properly configured.
+  bool get isConfigured {
     switch (provider) {
       case AiProvider.gemini:
-        return geminiApiKey;
+        return geminiProxyUrl != null && geminiProxyUrl!.isNotEmpty;
       case AiProvider.openai:
-        return openaiApiKey;
+        return openaiApiKey != null && openaiApiKey!.isNotEmpty;
     }
   }
-
-  /// Returns true if the current provider has a valid API key.
-  bool get hasValidApiKey => currentApiKey != null && currentApiKey!.isNotEmpty;
 }
 
 /// Provider for the AI generation service.
 ///
-/// Uses the configured provider (Gemini or OpenAI).
+/// Uses Firebase Functions proxy for Gemini (secure).
 /// NOTE: keepAlive to prevent recreation on every access.
 final aiGenerationServiceProvider = Provider<AiGenerationService?>((ref) {
   final config = ref.watch(aiConfigProvider);
 
-  if (!config.hasValidApiKey) return null;
+  if (!config.isConfigured) return null;
 
   switch (config.provider) {
     case AiProvider.gemini:
-      return GeminiGenerationService(apiKey: config.geminiApiKey!);
+      return GeminiProxyService(functionUrl: config.geminiProxyUrl!);
     case AiProvider.openai:
       return OpenAiGenerationService(apiKey: config.openaiApiKey!);
   }

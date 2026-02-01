@@ -28,7 +28,13 @@
       "Bash(if [ -f build_output.txt ])",
       "Bash(then cat build_output.txt)",
       "Bash(fi)",
-      "WebFetch(domain:pub.dev)"
+      "WebFetch(domain:pub.dev)",
+      "Bash(npm run build:*)",
+      "Bash(firebase functions:secrets:set:*)",
+      "Bash(firebase functions:list:*)",
+      "Bash(firebase functions:secrets:access:*)",
+      "Bash(cmd //c \"npm install\")",
+      "Bash(cmd //c \"firebase deploy --only functions\")"
     ]
   }
 }

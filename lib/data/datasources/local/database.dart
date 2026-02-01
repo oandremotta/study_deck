@@ -57,6 +57,34 @@ class AppDatabase extends _$AppDatabase {
   @override
   int get schemaVersion => 8;
 
+  /// Helper to add column only if it doesn't exist (for web compatibility).
+  Future<void> _addColumnIfNotExists(
+    String table,
+    String column,
+    String type,
+  ) async {
+    try {
+      // Check if column exists by querying table info
+      final result = await customSelect(
+        "PRAGMA table_info($table)",
+      ).get();
+
+      final columnExists = result.any((row) => row.data['name'] == column);
+
+      if (!columnExists) {
+        await customStatement('ALTER TABLE $table ADD COLUMN $column $type');
+      }
+    } catch (e) {
+      // If PRAGMA fails (some web implementations), try the ALTER anyway
+      // and catch the duplicate column error
+      try {
+        await customStatement('ALTER TABLE $table ADD COLUMN $column $type');
+      } catch (_) {
+        // Column already exists, ignore
+      }
+    }
+  }
+
   @override
   MigrationStrategy get migration {
     return MigrationStrategy(
@@ -105,33 +133,20 @@ class AppDatabase extends _$AppDatabase {
         }
         if (from < 6) {
           // Add pedagogical fields to card_table (EP60-EP62)
-          await customStatement(
-            'ALTER TABLE card_table ADD COLUMN summary TEXT',
-          );
-          await customStatement(
-            'ALTER TABLE card_table ADD COLUMN key_phrase TEXT',
-          );
+          // Check if column exists before adding (for web compatibility)
+          await _addColumnIfNotExists('card_table', 'summary', 'TEXT');
+          await _addColumnIfNotExists('card_table', 'key_phrase', 'TEXT');
         }
         if (from < 7) {
           // Add pedagogical fields to ai_card_drafts (UC167/UC168)
-          await customStatement(
-            'ALTER TABLE ai_card_drafts ADD COLUMN summary TEXT',
-          );
-          await customStatement(
-            'ALTER TABLE ai_card_drafts ADD COLUMN key_phrase TEXT',
-          );
-          await customStatement(
-            'ALTER TABLE ai_card_drafts ADD COLUMN needs_review INTEGER NOT NULL DEFAULT 0',
-          );
+          await _addColumnIfNotExists('ai_card_drafts', 'summary', 'TEXT');
+          await _addColumnIfNotExists('ai_card_drafts', 'key_phrase', 'TEXT');
+          await _addColumnIfNotExists('ai_card_drafts', 'needs_review', 'INTEGER NOT NULL DEFAULT 0');
         }
         if (from < 8) {
           // UC201-203: Add audio fields to card_table
-          await customStatement(
-            'ALTER TABLE card_table ADD COLUMN audio_url TEXT',
-          );
-          await customStatement(
-            'ALTER TABLE card_table ADD COLUMN pronunciation_url TEXT',
-          );
+          await _addColumnIfNotExists('card_table', 'audio_url', 'TEXT');
+          await _addColumnIfNotExists('card_table', 'pronunciation_url', 'TEXT');
         }
       },
     );
