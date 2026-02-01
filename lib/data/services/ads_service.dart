@@ -5,6 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'ads_web_stub.dart' if (dart.library.js_interop) 'ads_web_interop.dart';
+
 /// UC208-UC210, UC078-UC088: Rewarded ads service with anti-abuse protection.
 ///
 /// Handles:
@@ -134,11 +136,22 @@ class AdsService {
   /// Returns the number of credits earned (0 if ad was not watched).
   Future<int> showRewardedAd() async {
     if (kIsWeb) {
-      // Web uses AdSense - simulate for now
-      await Future.delayed(const Duration(seconds: 2));
-      _isAdLoaded = false;
-      await _recordAdWatched();
-      return creditsPerAd;
+      // Web uses AdSense via JavaScript interop
+      debugPrint('AdsService: Showing AdSense rewarded ad on web');
+      try {
+        final credits = await showWebRewardedAd();
+        if (credits > 0) {
+          _isAdLoaded = false;
+          await _recordAdWatched();
+          debugPrint('AdsService: Web ad completed, earned $credits credits');
+          return credits;
+        }
+        debugPrint('AdsService: Web ad dismissed without reward');
+        return 0;
+      } catch (e) {
+        debugPrint('AdsService: Web ad error: $e');
+        return 0;
+      }
     }
 
     if (!_isAdLoaded || _rewardedAd == null) {
