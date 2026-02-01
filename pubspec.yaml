@@ -65,6 +65,7 @@ dependencies:
   connectivity_plus: ^6.0.3
   shared_preferences: ^2.2.3
   http: ^1.2.0
+  url_launcher: ^6.2.5
 
   # Import/Export
   file_picker: ^8.0.0+1
@@ -86,6 +87,10 @@ dependencies:
 
   # Ads (UC208-UC210)
   google_mobile_ads: ^5.1.0
+
+  # In-App Purchases (RevenueCat)
+  purchases_flutter: ^8.0.0
+  purchases_ui_flutter: ^8.0.0
 
 dev_dependencies:
   flutter_test:

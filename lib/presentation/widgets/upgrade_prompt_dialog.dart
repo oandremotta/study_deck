@@ -114,7 +114,7 @@ class UpgradePromptDialog extends StatelessWidget {
             FilledButton.icon(
               onPressed: () {
                 Navigator.of(context).pop(UpgradeAction.upgrade);
-                context.push(AppRoutes.subscriptionPlans);
+                context.push(AppRoutes.subscriptionPaywall);
               },
               icon: const Icon(Icons.workspace_premium),
               label: const Text('Ver planos Premium'),

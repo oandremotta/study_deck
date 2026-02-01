@@ -4,8 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/extensions/context_extensions.dart';
+import '../../../domain/entities/ai_credit.dart';
 import '../../../domain/entities/subscription.dart';
 import '../../../domain/entities/user_stats.dart';
+import '../../providers/ai_credits_providers.dart';
 import '../../providers/app_preferences_provider.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/home_providers.dart';
@@ -1302,27 +1304,102 @@ class _PlanStatusCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // TODO: Get actual userId from auth
-    const userId = 'user_id';
-    final subscriptionAsync = ref.watch(userSubscriptionProvider(userId));
+    final user = ref.watch(currentUserProvider);
+    final isPremium = ref.watch(isPremiumUserProvider);
+    final balanceAsync = ref.watch(aiCreditBalanceProvider);
 
-    return subscriptionAsync.when(
-      data: (subscription) => _buildCard(context, subscription),
+    // Visitante
+    if (user == null) {
+      return _buildVisitorCard(context);
+    }
+
+    return balanceAsync.when(
+      data: (balance) => _buildCard(context, balance, isPremium),
       loading: () => const SizedBox.shrink(),
       error: (_, __) => const SizedBox.shrink(),
     );
   }
 
-  Widget _buildCard(BuildContext context, UserSubscription subscription) {
-    final isPremium = subscription.isPremium;
-    final credits = subscription.totalAiCredits;
+  Widget _buildVisitorCard(BuildContext context) {
+    return Card(
+      color: context.colorScheme.surfaceContainerHighest,
+      child: InkWell(
+        onTap: () => context.push(AppRoutes.subscriptionCredits),
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              // Plan badge
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: context.colorScheme.outline.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.person_outline,
+                      size: 16,
+                      color: context.colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Visitante',
+                      style: context.textTheme.labelMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: context.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              // Message
+              Expanded(
+                child: Text(
+                  'Crie conta para salvar creditos',
+                  style: context.textTheme.bodySmall?.copyWith(
+                    color: context.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              // CTA
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: context.colorScheme.primary,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  'Entrar',
+                  style: context.textTheme.labelSmall?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCard(BuildContext context, AiCreditBalance? balance, bool isPremium) {
+    final credits = balance?.available ?? 0;
+    final fromAds = balance?.adsWatchedToday ?? 0;
 
     return Card(
       color: isPremium
           ? context.colorScheme.primaryContainer
           : context.colorScheme.surfaceContainerHighest,
       child: InkWell(
-        onTap: () => context.push(AppRoutes.subscriptionSettings),
+        onTap: () => context.push(
+          isPremium ? AppRoutes.subscriptionSettings : AppRoutes.subscriptionCredits,
+        ),
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(12),
@@ -1361,27 +1438,61 @@ class _PlanStatusCard extends ConsumerWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              // AI Credits
+              // AI Credits info
               Expanded(
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.auto_awesome,
-                      size: 16,
-                      color: credits > 0
-                          ? context.colorScheme.tertiary
-                          : context.colorScheme.error,
+                    Row(
+                      children: [
+                        Icon(
+                          isPremium ? Icons.all_inclusive : Icons.auto_awesome,
+                          size: 16,
+                          color: isPremium
+                              ? context.colorScheme.onPrimaryContainer
+                              : credits > 0
+                                  ? context.colorScheme.tertiary
+                                  : context.colorScheme.error,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          isPremium ? 'IA ilimitada' : '$credits creditos IA',
+                          style: context.textTheme.bodySmall?.copyWith(
+                            color: isPremium
+                                ? context.colorScheme.onPrimaryContainer
+                                : credits > 0
+                                    ? context.colorScheme.onSurfaceVariant
+                                    : context.colorScheme.error,
+                            fontWeight: credits == 0 && !isPremium ? FontWeight.bold : null,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '$credits creditos IA',
-                      style: context.textTheme.bodySmall?.copyWith(
-                        color: credits > 0
-                            ? context.colorScheme.onSurfaceVariant
-                            : context.colorScheme.error,
-                        fontWeight: credits == 0 ? FontWeight.bold : null,
+                    // Origem dos creditos (apenas para usuarios gratuitos com creditos)
+                    if (!isPremium && credits > 0)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          fromAds > 0 ? 'ganhos com anuncios' : 'disponiveis',
+                          style: context.textTheme.labelSmall?.copyWith(
+                            color: context.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                            fontSize: 10,
+                          ),
+                        ),
                       ),
-                    ),
+                    // Microcopy para upgrade (usuarios gratuitos)
+                    if (!isPremium && credits == 0)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          'assista anuncio ou faca upgrade',
+                          style: context.textTheme.labelSmall?.copyWith(
+                            color: context.colorScheme.error.withValues(alpha: 0.8),
+                            fontSize: 10,
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -1393,12 +1504,23 @@ class _PlanStatusCard extends ConsumerWidget {
                     color: context.colorScheme.primary,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Text(
-                    'Upgrade',
-                    style: context.textTheme.labelSmall?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.add,
+                        size: 12,
+                        color: Colors.white,
+                      ),
+                      const SizedBox(width: 2),
+                      Text(
+                        'Mais',
+                        style: context.textTheme.labelSmall?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
                 )
               else

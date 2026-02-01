@@ -270,7 +270,7 @@ class _SyncSettingsScreenState extends ConsumerState<SyncSettingsScreen> {
             if (!_isPremium) ...[
               const SizedBox(height: 16),
               FilledButton.icon(
-                onPressed: () => context.push(AppRoutes.subscriptionPlans),
+                onPressed: () => context.push(AppRoutes.subscriptionPaywall),
                 icon: const Icon(Icons.workspace_premium),
                 label: const Text('Fazer Upgrade'),
               ),

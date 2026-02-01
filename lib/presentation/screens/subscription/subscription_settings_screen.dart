@@ -170,7 +170,7 @@ class _SubscriptionSettingsScreenState
           // Actions
           if (!subscription.isPremium) ...[
             FilledButton.icon(
-              onPressed: () => context.push(AppRoutes.subscriptionPlans),
+              onPressed: () => context.push(AppRoutes.subscriptionPaywall),
               icon: const Icon(Icons.upgrade),
               label: const Text('Fazer Upgrade'),
             ),

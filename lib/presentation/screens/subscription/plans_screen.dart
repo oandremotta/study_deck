@@ -1,17 +1,32 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../domain/entities/subscription.dart';
+import '../../providers/auth_providers.dart';
+import '../../providers/revenuecat_providers.dart';
 import '../../router/app_router.dart';
 
-/// UC258: Plans comparison screen.
+/// UC258, UC190, UC191: Plans comparison screen.
+///
+/// UC190: Planos ocultos para visitante
+/// UC191: Planos liberados apenas após login
 class PlansScreen extends ConsumerWidget {
   const PlansScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final user = ref.watch(currentUserProvider);
+
+    // UC190: Se não está logado, mostrar tela de login obrigatório
+    if (user == null) {
+      return _buildLoginRequiredScreen(context, theme);
+    }
+
+    // Check premium status (mobile only)
+    final isPremium = kIsWeb ? false : ref.watch(isPremiumProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -43,13 +58,13 @@ class PlansScreen extends ConsumerWidget {
             // Plans
             _PlanCard(
               plan: SubscriptionPlan.free,
-              isCurrentPlan: true, // TODO: Get from provider
+              isCurrentPlan: !isPremium,
               onSelect: () {},
             ),
             const SizedBox(height: 16),
             _PlanCard(
               plan: SubscriptionPlan.premiumMonthly,
-              isCurrentPlan: false,
+              isCurrentPlan: isPremium,
               onSelect: () {
                 context.push(AppRoutes.subscriptionPaywall);
               },
@@ -57,7 +72,7 @@ class PlansScreen extends ConsumerWidget {
             const SizedBox(height: 16),
             _PlanCard(
               plan: SubscriptionPlan.premiumAnnual,
-              isCurrentPlan: false,
+              isCurrentPlan: isPremium,
               isRecommended: true,
               onSelect: () {
                 context.push(AppRoutes.subscriptionPaywall);
@@ -75,6 +90,69 @@ class PlansScreen extends ConsumerWidget {
             const SizedBox(height: 16),
             _FeaturesComparisonTable(),
           ],
+        ),
+      ),
+    );
+  }
+
+  /// UC190: Tela para usuário não logado - planos ocultos
+  Widget _buildLoginRequiredScreen(BuildContext context, ThemeData theme) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Planos'),
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(50),
+                ),
+                child: Icon(
+                  Icons.lock_outline,
+                  size: 48,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+              const SizedBox(height: 32),
+              Text(
+                'Crie uma conta para ver os planos',
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Entre ou crie uma conta para desbloquear todos os recursos premium.',
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 48),
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: FilledButton.icon(
+                  onPressed: () {
+                    context.push('/login');
+                  },
+                  icon: const Icon(Icons.login),
+                  label: const Text(
+                    'Entrar ou Criar Conta',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

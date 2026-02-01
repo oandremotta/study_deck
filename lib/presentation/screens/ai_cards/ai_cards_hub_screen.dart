@@ -181,7 +181,7 @@ class _CreditsStatusCard extends StatelessWidget {
             ),
             if (!isPremium)
               TextButton(
-                onPressed: () => context.push(AppRoutes.subscriptionPlans),
+                onPressed: () => context.push(AppRoutes.subscriptionPaywall),
                 child: const Text('Upgrade'),
               ),
           ],
@@ -242,7 +242,7 @@ class _NoCreditsWarningState extends ConsumerState<_NoCreditsWarning> {
               runSpacing: 8,
               children: [
                 OutlinedButton.icon(
-                  onPressed: () => context.push(AppRoutes.subscriptionPlans),
+                  onPressed: () => context.push(AppRoutes.subscriptionPaywall),
                   icon: const Icon(Icons.workspace_premium, size: 18),
                   label: const Text('Fazer upgrade'),
                 ),
