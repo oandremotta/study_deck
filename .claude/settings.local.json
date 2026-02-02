@@ -36,7 +36,8 @@
       "Bash(cmd //c \"npm install\")",
       "Bash(cmd //c \"firebase deploy --only functions\")",
       "Bash(\"/c/Program Files/nodejs/npm.cmd\" install)",
-      "Bash(\"/c/Program Files/nodejs/firebase.cmd\" deploy --only functions)"
+      "Bash(\"/c/Program Files/nodejs/firebase.cmd\" deploy --only functions)",
+      "Bash(/c/Program Files/nodejs/firebase.cmd deploy --only hosting)"
     ]
   }
 }

@@ -707,8 +707,8 @@ class _AiCreditsScreenState extends ConsumerState<AiCreditsScreen> {
         packageId: _selectedPackage!.id,
         userId: user.id,
         userEmail: user.email,
-        successUrl: '$baseUrl/credits?success=true&credits=${_selectedPackage!.credits}',
-        cancelUrl: '$baseUrl/credits?canceled=true',
+        successUrl: '$baseUrl/subscription/credits?payment=success',
+        cancelUrl: '$baseUrl/subscription/credits?payment=canceled',
       );
 
       if (checkoutUrl == null) {
