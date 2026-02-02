@@ -47,7 +47,7 @@ class StripeWebService {
       name: '50 Creditos',
       credits: 50,
       priceDisplay: 'R\$ 9,90',
-      priceId: 'price_1SwB8wGUSTQ8gR9hYo6Mhibr',
+      priceId: 'price_1SwB8wGUSTQ8gR9h4Yo6MhiBr',
     ),
     'credits_150': StripeCreditPackage(
       id: 'credits_150',

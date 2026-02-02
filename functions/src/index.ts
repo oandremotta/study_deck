@@ -68,7 +68,7 @@ const SUBSCRIPTION_PRICE_IDS = {
 
 // Credit package prices in Stripe (one-time purchases)
 const CREDIT_PACKAGE_PRICE_IDS: Record<string, number> = {
-  "price_1SwB8wGUSTQ8gR9hYo6Mhibr": 50,   // 50 credits - R$ 9,90
+  "price_1SwB8wGUSTQ8gR9h4Yo6MhiBr": 50,   // 50 credits - R$ 9,90
   "price_1SwB9OGUSTQ8gR9hdh2qmtS2": 150,  // 150 credits - R$ 24,90
   "price_1SwB9gGUSTQ8gR9hwjC7UVsz": 500,  // 500 credits - R$ 69,90
 };
