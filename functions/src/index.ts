@@ -87,8 +87,8 @@ export const createStripeCheckout = onRequest(
 
       const { priceId, userId, userEmail, successUrl, cancelUrl } = req.body;
 
-      if (!priceId || !userId || !userEmail) {
-        res.status(400).json({ error: "Missing priceId, userId, or userEmail" });
+      if (!priceId || !userId) {
+        res.status(400).json({ error: "Missing priceId or userId" });
         return;
       }
 
@@ -107,7 +107,7 @@ export const createStripeCheckout = onRequest(
             quantity: 1,
           },
         ],
-        customer_email: userEmail,
+        ...(userEmail && { customer_email: userEmail }),
         client_reference_id: userId,
         success_url: successUrl || "https://studydeck-78bde.web.app/subscription/success",
         cancel_url: cancelUrl || "https://studydeck-78bde.web.app/subscription/cancel",
