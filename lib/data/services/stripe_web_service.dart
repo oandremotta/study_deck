@@ -10,7 +10,7 @@ class StripeWebService {
   static const String _functionsUrl =
       'https://us-central1-studydeck-78bde.cloudfunctions.net';
 
-  /// Available plans with their Stripe Price IDs
+  /// Available subscription plans with their Stripe Price IDs
   /// These must be created in Stripe Dashboard
   static const Map<String, StripePlan> plans = {
     'monthly': StripePlan(
@@ -36,6 +36,32 @@ class StripeWebService {
       priceDisplay: 'R\$ 299,90',
       priceId: 'price_1Svuc2GUSTQ8gR9hDC0rKi84a',
       isSubscription: false,
+    ),
+  };
+
+  /// Credit packages with Stripe Price IDs (one-time purchases)
+  /// Created in Stripe Dashboard (Test Mode)
+  static const Map<String, StripeCreditPackage> creditPackages = {
+    'credits_50': StripeCreditPackage(
+      id: 'credits_50',
+      name: '50 Creditos',
+      credits: 50,
+      priceDisplay: 'R\$ 9,90',
+      priceId: 'price_1SwB8wGUSTQ8gR9hYo6Mhibr',
+    ),
+    'credits_150': StripeCreditPackage(
+      id: 'credits_150',
+      name: '150 Creditos',
+      credits: 150,
+      priceDisplay: 'R\$ 24,90',
+      priceId: 'price_1SwB9OGUSTQ8gR9hdh2qmtS2',
+    ),
+    'credits_500': StripeCreditPackage(
+      id: 'credits_500',
+      name: '500 Creditos',
+      credits: 500,
+      priceDisplay: 'R\$ 69,90',
+      priceId: 'price_1SwB9gGUSTQ8gR9hwjC7UVsz',
     ),
   };
 
@@ -80,6 +106,41 @@ class StripeWebService {
   List<StripePlan> getPlans() {
     return plans.values.toList();
   }
+
+  /// Create checkout session for credit package purchase.
+  ///
+  /// Returns the checkout URL on success, null on error.
+  Future<String?> createCreditPackageCheckout({
+    required String packageId,
+    required String userId,
+    String? userEmail,
+    String? successUrl,
+    String? cancelUrl,
+  }) async {
+    final package = creditPackages[packageId];
+    if (package == null) {
+      debugPrint('Credit package not found: $packageId');
+      return null;
+    }
+
+    if (!package.hasValidPriceId) {
+      debugPrint('Credit package has no valid Stripe Price ID: $packageId');
+      return null;
+    }
+
+    return createCheckoutSession(
+      priceId: package.priceId,
+      userId: userId,
+      userEmail: userEmail,
+      successUrl: successUrl,
+      cancelUrl: cancelUrl,
+    );
+  }
+
+  /// Get credit package by ID.
+  StripeCreditPackage? getCreditPackage(String id) {
+    return creditPackages[id];
+  }
 }
 
 /// Stripe plan model.
@@ -103,4 +164,25 @@ class StripePlan {
   bool get isMonthly => id == 'monthly';
   bool get isAnnual => id == 'annual';
   bool get isLifetime => id == 'lifetime';
+}
+
+/// Stripe credit package model for one-time purchases.
+class StripeCreditPackage {
+  final String id;
+  final String name;
+  final int credits;
+  final String priceDisplay;
+  final String priceId;
+
+  const StripeCreditPackage({
+    required this.id,
+    required this.name,
+    required this.credits,
+    required this.priceDisplay,
+    required this.priceId,
+  });
+
+  /// Check if the package has a valid Stripe Price ID configured
+  bool get hasValidPriceId =>
+      priceId.isNotEmpty && !priceId.contains('REPLACE_ME');
 }

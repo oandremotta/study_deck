@@ -1,6 +1,10 @@
 import { onRequest } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
 import Stripe from "stripe";
+import * as admin from "firebase-admin";
+
+// Initialize Firebase Admin
+admin.initializeApp();
 
 const GEMINI_API_KEY = defineSecret("GEMINI_API_KEY");
 const STRIPE_SECRET_KEY = defineSecret("STRIPE_SECRET_KEY");
@@ -55,12 +59,22 @@ export const generateWithGemini = onRequest(
 
 // ============ Stripe Checkout ============
 
-// Product prices in Stripe
-const PRICE_IDS = {
+// Subscription prices in Stripe
+const SUBSCRIPTION_PRICE_IDS = {
   monthly: "price_1SvubBGUSTQ8gR9hEwwN1JXm",
   annual: "price_1SvubhGUSTQ8gR9hgHbo2Sy9",
   lifetime: "price_1Svuc2GUSTQ8gR9hDC0rKi84a",
 };
+
+// Credit package prices in Stripe (one-time purchases)
+const CREDIT_PACKAGE_PRICE_IDS: Record<string, number> = {
+  "price_1SwB8wGUSTQ8gR9hYo6Mhibr": 50,   // 50 credits - R$ 9,90
+  "price_1SwB9OGUSTQ8gR9hdh2qmtS2": 150,  // 150 credits - R$ 24,90
+  "price_1SwB9gGUSTQ8gR9hwjC7UVsz": 500,  // 500 credits - R$ 69,90
+};
+
+// Helper to check if a priceId is for credits
+const isCreditPackage = (priceId: string) => priceId in CREDIT_PACKAGE_PRICE_IDS;
 
 export const createStripeCheckout = onRequest(
   { secrets: [STRIPE_SECRET_KEY], cors: true, region: "us-central1" },
@@ -80,8 +94,9 @@ export const createStripeCheckout = onRequest(
 
       const stripe = new Stripe(STRIPE_SECRET_KEY.value());
 
-      // Determine if it's a subscription or one-time payment
-      const isSubscription = priceId !== PRICE_IDS.lifetime;
+      // Determine if it's a subscription, credit package, or one-time payment
+      const isCredit = isCreditPackage(priceId);
+      const isSubscription = !isCredit && priceId !== SUBSCRIPTION_PRICE_IDS.lifetime;
 
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ["card"],
@@ -98,7 +113,9 @@ export const createStripeCheckout = onRequest(
         cancel_url: cancelUrl || "https://studydeck-78bde.web.app/subscription/cancel",
         metadata: {
           userId: userId,
-          plan: priceId,
+          priceId: priceId,
+          type: isCredit ? "credits" : "subscription",
+          credits: isCredit ? CREDIT_PACKAGE_PRICE_IDS[priceId].toString() : "0",
         },
       });
 
@@ -127,8 +144,54 @@ export const stripeWebhook = onRequest(
       switch (event.type) {
         case "checkout.session.completed": {
           const session = event.data.object;
-          console.log("Payment successful for user:", session.client_reference_id);
-          // TODO: Update user's premium status in Firestore
+          const userId = session.client_reference_id || session.metadata?.userId;
+          const metadata = session.metadata || {};
+
+          console.log("Payment successful for user:", userId);
+          console.log("Session metadata:", metadata);
+
+          // Handle credit package purchase
+          if (metadata.type === "credits" && metadata.credits) {
+            const creditsToAdd = parseInt(metadata.credits, 10);
+
+            if (userId && creditsToAdd > 0) {
+              const db = admin.firestore();
+
+              // Add credits to user's balance in Firestore
+              const userCreditsRef = db.collection("user_credits").doc(userId);
+
+              await db.runTransaction(async (transaction) => {
+                const doc = await transaction.get(userCreditsRef);
+                const currentBalance = doc.exists ? (doc.data()?.available || 0) : 0;
+                const currentTotal = doc.exists ? (doc.data()?.totalEarned || 0) : 0;
+
+                transaction.set(userCreditsRef, {
+                  userId: userId,
+                  available: currentBalance + creditsToAdd,
+                  totalEarned: currentTotal + creditsToAdd,
+                  lastPurchase: admin.firestore.FieldValue.serverTimestamp(),
+                  updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                }, { merge: true });
+              });
+
+              // Log the purchase
+              await db.collection("credit_purchases").add({
+                userId: userId,
+                credits: creditsToAdd,
+                priceId: metadata.priceId,
+                sessionId: session.id,
+                amount: session.amount_total,
+                currency: session.currency,
+                createdAt: admin.firestore.FieldValue.serverTimestamp(),
+              });
+
+              console.log(`Added ${creditsToAdd} credits to user ${userId}`);
+            }
+          } else {
+            // Handle subscription purchase
+            // TODO: Update user's premium status in Firestore
+            console.log("Subscription purchase - implement premium status update");
+          }
           break;
         }
         case "customer.subscription.deleted": {

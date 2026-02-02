@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../data/services/ai_credits_service.dart';
+import '../../../data/services/stripe_web_service.dart';
 import '../../../domain/entities/ai_credit.dart';
 import '../../providers/ads_providers.dart' as ads;
 import '../../providers/ai_credits_providers.dart';
@@ -659,21 +661,78 @@ class _AiCreditsScreenState extends ConsumerState<AiCreditsScreen> {
   Future<void> _purchaseCredits() async {
     if (_selectedPackage == null) return;
 
+    final user = ref.read(currentUserProvider);
+    if (user == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Voce precisa estar logado para comprar creditos'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     try {
-      // TODO: Integrar com Stripe para pagamento real
-      await addCreditsFromPurchase(ref, _selectedPackage!.credits);
-      ref.invalidate(aiCreditBalanceProvider);
+      // Check if Stripe is configured for this package
+      final stripePackage =
+          StripeWebService.creditPackages[_selectedPackage!.id];
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${_selectedPackage!.credits} creditos adicionados!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        setState(() => _selectedPackage = null);
+      if (stripePackage == null || !stripePackage.hasValidPriceId) {
+        // Stripe not configured yet - show error
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Pagamentos ainda nao estao disponiveis. Tente novamente em breve.',
+              ),
+              backgroundColor: Colors.orange,
+              duration: Duration(seconds: 4),
+            ),
+          );
+        }
+        return;
+      }
+
+      // Create Stripe Checkout session
+      final stripeService = StripeWebService();
+      final baseUrl = kIsWeb
+          ? Uri.base.origin
+          : 'https://studydeck-78bde.web.app';
+
+      final checkoutUrl = await stripeService.createCreditPackageCheckout(
+        packageId: _selectedPackage!.id,
+        userId: user.id,
+        userEmail: user.email,
+        successUrl: '$baseUrl/credits?success=true&credits=${_selectedPackage!.credits}',
+        cancelUrl: '$baseUrl/credits?canceled=true',
+      );
+
+      if (checkoutUrl == null) {
+        throw Exception('Erro ao criar sessao de pagamento');
+      }
+
+      // Open Stripe Checkout
+      final uri = Uri.parse(checkoutUrl);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Redirecionando para pagamento... Os creditos serao adicionados apos a confirmacao.',
+              ),
+              backgroundColor: Colors.blue,
+              duration: Duration(seconds: 5),
+            ),
+          );
+        }
+      } else {
+        throw Exception('Nao foi possivel abrir a pagina de pagamento');
       }
     } catch (e) {
       if (mounted) {
