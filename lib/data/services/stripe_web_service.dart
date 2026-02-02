@@ -109,6 +109,9 @@ class StripeWebService {
 
   /// Create checkout session for credit package purchase.
   ///
+  /// Sends packageId to Cloud Function which resolves the priceId
+  /// based on environment (dev/prod).
+  ///
   /// Returns the checkout URL on success, null on error.
   Future<String?> createCreditPackageCheckout({
     required String packageId,
@@ -123,18 +126,31 @@ class StripeWebService {
       return null;
     }
 
-    if (!package.hasValidPriceId) {
-      debugPrint('Credit package has no valid Stripe Price ID: $packageId');
+    try {
+      final response = await http.post(
+        Uri.parse('$_functionsUrl/createStripeCheckout'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'packageId': packageId, // Server resolves priceId from this
+          'userId': userId,
+          'userEmail': userEmail,
+          'successUrl': successUrl,
+          'cancelUrl': cancelUrl,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['url'] as String?;
+      }
+
+      debugPrint('Stripe checkout error: ${response.statusCode}');
+      debugPrint('Response: ${response.body}');
+      return null;
+    } catch (e) {
+      debugPrint('Stripe checkout error: $e');
       return null;
     }
-
-    return createCheckoutSession(
-      priceId: package.priceId,
-      userId: userId,
-      userEmail: userEmail,
-      successUrl: successUrl,
-      cancelUrl: cancelUrl,
-    );
   }
 
   /// Get credit package by ID.

@@ -9,6 +9,26 @@ admin.initializeApp();
 const GEMINI_API_KEY = defineSecret("GEMINI_API_KEY");
 const STRIPE_SECRET_KEY = defineSecret("STRIPE_SECRET_KEY");
 
+// Environment: "dev" (test mode) or "prod" (live mode)
+const STRIPE_ENV = process.env.STRIPE_ENV || "dev";
+
+// Credit packages - reads from .env based on STRIPE_ENV
+const getCreditPackages = () => {
+  if (STRIPE_ENV === "prod") {
+    return {
+      credits_50: { priceId: process.env.PROD_PRICE_CREDITS_50 || "", credits: 50 },
+      credits_150: { priceId: process.env.PROD_PRICE_CREDITS_150 || "", credits: 150 },
+      credits_500: { priceId: process.env.PROD_PRICE_CREDITS_500 || "", credits: 500 },
+    };
+  }
+  // Default: dev
+  return {
+    credits_50: { priceId: process.env.DEV_PRICE_CREDITS_50 || "", credits: 50 },
+    credits_150: { priceId: process.env.DEV_PRICE_CREDITS_150 || "", credits: 150 },
+    credits_500: { priceId: process.env.DEV_PRICE_CREDITS_500 || "", credits: 500 },
+  };
+};
+
 export const generateWithGemini = onRequest(
   { secrets: [GEMINI_API_KEY], cors: true, region: 'us-central1' },
   async (req, res) => {
@@ -59,22 +79,31 @@ export const generateWithGemini = onRequest(
 
 // ============ Stripe Checkout ============
 
-// Subscription prices in Stripe
-const SUBSCRIPTION_PRICE_IDS = {
-  monthly: "price_1SvubBGUSTQ8gR9hEwwN1JXm",
-  annual: "price_1SvubhGUSTQ8gR9hgHbo2Sy9",
-  lifetime: "price_1Svuc2GUSTQ8gR9hDC0rKi84a",
+// Subscription prices - reads from .env based on STRIPE_ENV
+const getSubscriptionPrices = () => {
+  if (STRIPE_ENV === "prod") {
+    return {
+      monthly: process.env.PROD_PRICE_MONTHLY || "",
+      annual: process.env.PROD_PRICE_ANNUAL || "",
+      lifetime: process.env.PROD_PRICE_LIFETIME || "",
+    };
+  }
+  // Default: dev
+  return {
+    monthly: process.env.DEV_PRICE_MONTHLY || "",
+    annual: process.env.DEV_PRICE_ANNUAL || "",
+    lifetime: process.env.DEV_PRICE_LIFETIME || "",
+  };
 };
 
-// Credit package prices in Stripe (one-time purchases)
-const CREDIT_PACKAGE_PRICE_IDS: Record<string, number> = {
-  "price_1SwB8wGUSTQ8gR9h4Yo6MhiBr": 50,   // 50 credits - R$ 9,90
-  "price_1SwB9OGUSTQ8gR9hdh2qmtS2": 150,  // 150 credits - R$ 24,90
-  "price_1SwB9gGUSTQ8gR9hwjC7UVsz": 500,  // 500 credits - R$ 69,90
+// Helper to resolve packageId to priceId and credits
+const resolveCreditPackage = (packageId: string) => {
+  const packages = getCreditPackages();
+  return packages[packageId as keyof typeof packages] || null;
 };
 
-// Helper to check if a priceId is for credits
-const isCreditPackage = (priceId: string) => priceId in CREDIT_PACKAGE_PRICE_IDS;
+// Helper to check if packageId is valid
+const isValidCreditPackage = (packageId: string) => resolveCreditPackage(packageId) !== null;
 
 export const createStripeCheckout = onRequest(
   { secrets: [STRIPE_SECRET_KEY], cors: true, region: "us-central1" },
@@ -85,18 +114,50 @@ export const createStripeCheckout = onRequest(
         return;
       }
 
-      const { priceId, userId, userEmail, successUrl, cancelUrl } = req.body;
+      // Accept either packageId (for credits) or planId (for subscriptions)
+      const { packageId, planId, userId, userEmail, successUrl, cancelUrl } = req.body;
 
-      if (!priceId || !userId) {
-        res.status(400).json({ error: "Missing priceId or userId" });
+      if (!userId) {
+        res.status(400).json({ error: "Missing userId" });
+        return;
+      }
+
+      if (!packageId && !planId) {
+        res.status(400).json({ error: "Missing packageId or planId" });
         return;
       }
 
       const stripe = new Stripe(STRIPE_SECRET_KEY.value());
+      const subscriptionPrices = getSubscriptionPrices();
 
-      // Determine if it's a subscription, credit package, or one-time payment
-      const isCredit = isCreditPackage(priceId);
-      const isSubscription = !isCredit && priceId !== SUBSCRIPTION_PRICE_IDS.lifetime;
+      let priceId: string;
+      let credits = 0;
+      let isSubscription = false;
+      let isCredit = false;
+
+      // Resolve priceId from packageId or planId
+      if (packageId) {
+        // Credit package purchase
+        const creditPackage = resolveCreditPackage(packageId);
+        if (!creditPackage) {
+          res.status(400).json({ error: `Invalid packageId: ${packageId}` });
+          return;
+        }
+        priceId = creditPackage.priceId;
+        credits = creditPackage.credits;
+        isCredit = true;
+      } else {
+        // Subscription purchase
+        const validPlans = ["monthly", "annual", "lifetime"];
+        if (!validPlans.includes(planId)) {
+          res.status(400).json({ error: `Invalid planId: ${planId}` });
+          return;
+        }
+        priceId = subscriptionPrices[planId as keyof typeof subscriptionPrices];
+        isSubscription = planId !== "lifetime";
+      }
+
+      console.log(`Creating checkout: env=${STRIPE_ENV}, priceId=${priceId}, credits=${credits}`);
 
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ["card"],
@@ -114,8 +175,10 @@ export const createStripeCheckout = onRequest(
         metadata: {
           userId: userId,
           priceId: priceId,
+          packageId: packageId || "",
+          planId: planId || "",
           type: isCredit ? "credits" : "subscription",
-          credits: isCredit ? CREDIT_PACKAGE_PRICE_IDS[priceId].toString() : "0",
+          credits: credits.toString(),
         },
       });
 
